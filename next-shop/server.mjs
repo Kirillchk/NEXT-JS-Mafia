@@ -17,6 +17,22 @@ function addKeyValueToJSON(filePath, key, value) {
         console.error('Error updating JSON file:', err);
     }
 }
+function deleteKeyFromJSON(filePath, key) {
+	try {
+			const jsonString = fs.readFileSync(filePath, 'utf8');
+			const data = JSON.parse(jsonString);
+
+			if (key in data) {
+					delete data[key];
+					fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+					console.log(`Key "${key}" deleted successfully.`);
+			} else {
+					console.log(`Key "${key}" not found in the JSON file.`);
+			}
+	} catch (err) {
+			console.error('Error updating JSON file:', err);
+	}
+}
 
 const dev = process.env.NODE_ENV !== "production"
 const hostname = "localhost"
@@ -40,11 +56,15 @@ app.prepare().then(() => {
 			const room = {
 				name: data.name,
 				password: data.password,
-				onlineCount: data.onlineCount,
+				onlineCount: 0,
 				onlineMax: data.onlineMax
 			}
 			addKeyValueToJSON(filePath, ID, room)
 			io.emit("createroom", room)
+		});
+		socket.on("deleteroom", (data) => {
+			deleteKeyFromJSON(filePath, data.ID)
+			io.emit("deleteroom", data)
 		});
   });
 
