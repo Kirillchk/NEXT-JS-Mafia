@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media (prefers-color-scheme: dark ) {
+	.main_background {
+		filter: invert(100%) blur(0.5vh);
+	}
+	* {
+		font-family: "Oswald", serif;
+		color: white;
+		text-shadow: black 0.1rem 0rem 0.05rem;
+	}
+}
+@media (prefers-color-scheme: light) {
+	.main_background {
+		filter: blur(0.5vh);
+	}
+	* {
+		font-family: "Oswald", serif;
+		color: black;
+		text-shadow: white 0.1rem 0rem 0.05rem;
+	}
+}
+
+.main_background {
+	background-image: url("/ZJxnhFCl.jpg");
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: cover;
+  font-family: Arial, Helvetica, sans-serif;
+	z-index: -10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
