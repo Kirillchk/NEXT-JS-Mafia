@@ -13,10 +13,12 @@ let socket: Socket
 
 const Home = () => {
 	const [getRooms, setRooms] = useState<Map<string, Room>>(new Map());
-	const [getDefaultvalue, setDefaultValue] = useState<string>()
+	const [getRoomName, setRoomName] = useState<string>()
+	const [getPassword, setPassword] = useState<string>()
+	const [getMaxPlayers, setMaxPlayers] = useState<string>('5')
 	const [getBool, setBool] = useState<boolean>(true)
 	const createRoom = async () => {
-
+		console.log('pupupu')
 	} 
 	useEffect(() => {
 		async function fetchRooms() {
@@ -68,10 +70,16 @@ const Home = () => {
 					</div>
 				))}
 			</div>
-			<form className="flex flex-col ">
-				<input type="text" value={getDefaultvalue} placeholder="Room name" 
+			<form className="flex flex-col" action={createRoom}>
+				<input type="text" value={getRoomName} placeholder="Room name" 
 					className="block bg-gray-400/50"/>
 				<div className="flex m-auto">
+					<input type="range" min='1' max='10' step='1' value={getMaxPlayers} onChange={e => setMaxPlayers(e.target.value)}/>
+					<label className="w-2">{getMaxPlayers.toString()}</label>
+				</div>
+				<div className="flex m-auto">
+					<input type="text" value={getPassword} placeholder="Password" 
+						className="block bg-gray-400/50"/>
 					<input onClick={()=>setBool(!getBool)} type="checkbox" id="CheckPAss" checked={getBool}
 						className="block bg-gray-400/50"/>
 					<label htmlFor="CheckPAss" 
