@@ -1,10 +1,4 @@
 {
-  "ece5873f-ed49-4906-bf55-2a7848650c4a": {
-    "name": "underd",
-    "password": "sses",
-    "onlineCount": 2,
-    "onlineMax": 5
-  },
   "5bbe3d79-639f-4440-a622-52098c53bba3": {
     "name": "evil ass rape building",
     "password": "sses",
@@ -16,5 +10,47 @@
     "password": "sses",
     "onlineCount": 2,
     "onlineMax": 5
+  },
+  "4d888139-1a9c-46f7-a524-fd5abf3ee95d": {
+    "name": "data.name",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
+  },
+  "7fcbb474-b09b-477b-b3b3-40b8bcc374c5": {
+    "name": "data.name",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
+  },
+  "d63fedb0-eb0c-4337-afbd-729ee5dff06a": {
+    "name": "datassssss",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
+  },
+  "a0c293d6-4bfd-41ec-87bc-e1dc9f84953c": {
+    "name": "datassss555ss",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
+  },
+  "c028a9a5-6eda-443a-833a-557095984c20": {
+    "name": "datassss555sdf3ss",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
+  },
+  "b62570e0-cac7-4f48-9ff8-7bb5726393bd": {
+    "name": "daitassss555sdf3ss",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
+  },
+  "8b693527-5d5a-4da7-b3b4-8fce0583b1a6": {
+    "name": "dasss",
+    "password": false,
+    "onlineCount": 0,
+    "onlineMax": 7
   }
 }

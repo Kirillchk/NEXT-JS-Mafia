@@ -80,10 +80,15 @@ const getroles = {
 	mama: 0,
 }
 import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import io, { Socket } from "socket.io-client";
+let socket: Socket
+
 export default function 
 Home () {
-	// { params }: { params: Promise<{roomID: string}>}
-	//const Id = (await params).roomID
+	useEffect(() => {
+
+	})
   const searchParams = useSearchParams();
   const utmSource = searchParams.get('utm_search');
   return (
