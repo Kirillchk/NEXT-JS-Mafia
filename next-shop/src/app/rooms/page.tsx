@@ -5,29 +5,38 @@ import io, { Socket } from "socket.io-client";
 
 interface Room {
 	name: string;
-	password: boolean;
+	password: string;
 	onlineCount: number;
 	onlineMax: number;
-} 
-let socket: Socket
+}
+var socket: Socket;
 
 const Home = () => {
 	const [getRooms, setRooms] = useState<Map<string, Room>>(new Map());
-	const [getRoomName, setRoomName] = useState<string>()
-	const [getPassword, setPassword] = useState<string>()
-	const [getMaxPlayers, setMaxPlayers] = useState<string>('5')
-	const [getBool, setBool] = useState<boolean>(true)
-	const createRoom = async () => {
-		console.log('pupupu')
-	} 
+	const [getBool, setBool] = useState<boolean>(true);
+
+	const [getRoomName, setRoomName] = useState<string>("");
+	const [getPassword, setPassword] = useState<string>("");
+	const [getMaxPlayers, setMaxPlayers] = useState<string>("5");
+	const [getVisible, setVisible] = useState<boolean>(false);
+
+	const createRoom = async (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault(); // Prevents default form behavior
+		const data = {
+			name: getRoomName,
+			password: getPassword,
+			onlineMax: getMaxPlayers,
+		};
+		socket.emit("createroom", data);
+		// Do not clear state immediately to avoid re-render affecting the form
+	};
+
 	useEffect(() => {
 		async function fetchRooms() {
 			const res = await fetch("http://localhost:3000/api/allrooms");
 			const data = await res.json();
-
-			const updatedMap = new Map<string, Room>(
-				Object.entries(data) 
-			);
+			console.log("Fetched rooms data:", data);
+			const updatedMap = new Map<string, Room>(Object.entries(data));
 			setRooms(updatedMap);
 		}
 
@@ -54,10 +63,13 @@ const Home = () => {
 	return (
 		<div className="flex-row p-[10vh]">
 			<h1>All Rooms</h1>
-			<button onClick={createRoom}>Add Room</button>
+			<button onClick={() => setVisible(!getVisible)}>Add Room</button>
 			<div className="grid gap-2">
 				{[...getRooms.entries()].map(([key, room]) => (
-					<div key={key} className="w-auto mx-auto bg-gray-400/50 flex justify-around items-center">
+					<div
+						key={key}
+						className="w-auto mx-auto bg-gray-400/50 flex justify-around items-center"
+					>
 						<Link
 							href={`/mafia_room?utm_search=${key}`}
 							className="inline px-5"
@@ -70,24 +82,58 @@ const Home = () => {
 					</div>
 				))}
 			</div>
-			<form className="flex flex-col" action={createRoom}>
-				<input type="text" value={getRoomName} placeholder="Room name" 
-					className="block bg-gray-400/50"/>
-				<div className="flex m-auto">
-					<input type="range" min='1' max='10' step='1' value={getMaxPlayers} onChange={e => setMaxPlayers(e.target.value)}/>
-					<label className="w-2">{getMaxPlayers.toString()}</label>
-				</div>
-				<div className="flex m-auto">
-					<input type="text" value={getPassword} placeholder="Password" 
-						className="block bg-gray-400/50"/>
-					<input onClick={()=>setBool(!getBool)} type="checkbox" id="CheckPAss" checked={getBool}
-						className="block bg-gray-400/50"/>
-					<label htmlFor="CheckPAss" 
-						className="bg-gray-400/50">{getBool.toString()}</label>
-				</div>
-				<input type="submit" value="submit" 
-					className="bg-gray-400/50"/>
-			</form>
+			{getVisible && (
+				<form className="flex flex-col" onSubmit={createRoom}>
+					<input
+						type="text"
+						required
+						onChange={(e) => setRoomName(e.target.value)}
+						value={getRoomName}
+						placeholder="Room name"
+						className="block bg-gray-400/50"
+					/>
+					<div className="flex m-auto">
+						<input
+							type="range"
+							min="1"
+							max="10"
+							step="1"
+							value={getMaxPlayers}
+							onChange={(e) => setMaxPlayers(e.target.value)}
+						/>
+						<label className="w-2">{getMaxPlayers.toString()}</label>
+					</div>
+					<div className="flex m-auto">
+						{getBool && (
+							<input
+								required
+								onChange={(e) => setPassword(e.target.value)}
+								type="text"
+								value={getPassword}
+								placeholder="Password"
+								className="block bg-gray-400/50"
+							/>
+						)}
+						<input
+							onChange={() => {
+								setBool(!getBool);
+								setPassword("");
+							}}
+							type="checkbox"
+							id="CheckPAss"
+							checked={getBool}
+							className="block bg-gray-400/50"
+						/>
+						<label
+							htmlFor="CheckPAss"
+							className="bg-gray-400/50"
+						>
+							{getBool.toString()}
+						</label>
+					</div>
+					<input type="submit" value="submit" className="bg-gray-400/50" />
+				</form>
+			)}
 		</div>
 	);
 };
