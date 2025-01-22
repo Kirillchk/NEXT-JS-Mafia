@@ -90,7 +90,7 @@ Home () {
 
 	})
   const searchParams = useSearchParams();
-  const utmSource = searchParams.get('utm_search');
+  const utmSource = searchParams.get('utm_room');
   return (
 	<div className="flex justify-between">
 		<aside className="h-[100vh] w-[20vw]">

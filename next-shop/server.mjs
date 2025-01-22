@@ -7,30 +7,30 @@ import fs from 'fs';
 const filePath = './data/rooms.json'
 
 function addKeyValueToJSON(filePath, key, value) {
-    try {
-        const jsonString = fs.readFileSync(filePath, 'utf8');
-        const data = JSON.parse(jsonString);
-        data[key] = value;
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-        console.log(`Key "${key}" added successfully.`);
-    } catch (err) {
-        console.error('Error updating JSON file:', err);
-    }
+	try {
+		const jsonString = fs.readFileSync(filePath, 'utf8');
+		const data = JSON.parse(jsonString);
+		data[key] = value;
+		fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+		console.log(`Key "${key}" added successfully.`);
+	} catch (err) {
+		console.error('Error updating JSON file:', err);
+	}
 }
 function deleteKeyFromJSON(filePath, key) {
 	try {
-			const jsonString = fs.readFileSync(filePath, 'utf8');
-			const data = JSON.parse(jsonString);
+		const jsonString = fs.readFileSync(filePath, 'utf8');
+		const data = JSON.parse(jsonString);
 
-			if (key in data) {
-					delete data[key];
-					fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-					console.log(`Key "${key}" deleted successfully.`);
-			} else {
-					console.log(`Key "${key}" not found in the JSON file.`);
-			}
+		if (key in data) {
+			delete data[key];
+			fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+			console.log(`Key "${key}" deleted successfully.`);
+		} else {
+			console.log(`Key "${key}" not found in the JSON file.`);
+		}
 	} catch (err) {
-			console.error('Error updating JSON file:', err);
+		console.error('Error updating JSON file:', err);
 	}
 }
 
@@ -45,9 +45,7 @@ app.prepare().then(() => {
   const io = new Server(httpServer)
 
   io.on("connection", (socket) => {
-		console.log('AAAAAAAAAAAA')
 		socket.on("message", ({ roomId, message }) => {
-			console.log("Received message:", message, "to room ", roomId)
 			io.to(roomId).emit('message', `${socket.id}: ${message}`)
 		})
 		socket.on("createroom", (data) => {
@@ -55,12 +53,11 @@ app.prepare().then(() => {
 			socket.join(ID); 
 			const room = {
 				name: data.name,
-				password: data.password,
 				onlineCount: 0,
 				onlineMax: data.onlineMax
 			}
 			addKeyValueToJSON(filePath, ID, room)
-			io.emit("createroom", room)
+			io.emit("room_created", { key: ID, room: room})
 		});
 		socket.on("deleteroom", (data) => {
 			deleteKeyFromJSON(filePath, data.ID)

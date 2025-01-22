@@ -5,18 +5,16 @@ import io, { Socket } from "socket.io-client";
 
 interface Room {
 	name: string;
-	password: string;
 	onlineCount: number;
 	onlineMax: number;
 }
 var socket: Socket;
 
 const Home = () => {
-	const [getRooms, setRooms] = useState<Map<string, Room>>(new Map());
+	console.log('parent')
 	const [getBool, setBool] = useState<boolean>(true);
 
 	const [getRoomName, setRoomName] = useState<string>("");
-	const [getPassword, setPassword] = useState<string>("");
 	const [getMaxPlayers, setMaxPlayers] = useState<string>("5");
 	const [getVisible, setVisible] = useState<boolean>(false);
 
@@ -24,64 +22,17 @@ const Home = () => {
 		event.preventDefault(); // Prevents default form behavior
 		const data = {
 			name: getRoomName,
-			password: getPassword,
 			onlineMax: getMaxPlayers,
 		};
 		socket.emit("createroom", data);
-		// Do not clear state immediately to avoid re-render affecting the form
+		//// Do not clear state immediately to avoid re-render affecting the form
 	};
-
-	useEffect(() => {
-		async function fetchRooms() {
-			const res = await fetch("http://localhost:3000/api/allrooms");
-			const data = await res.json();
-			console.log("Fetched rooms data:", data);
-			const updatedMap = new Map<string, Room>(Object.entries(data));
-			setRooms(updatedMap);
-		}
-
-		fetchRooms();
-		socket = io("http://localhost:3000");
-		socket.on("connect", () => {
-			console.log("Connected to WebSocket server!");
-		});
-		socket.on("createroom", (message: { key: string; room: Room }) => {
-			setRooms((prev) => new Map(prev).set(message.key, message.room));
-		});
-		socket.on("deleteroom", (key: string) => {
-			setRooms((prev) => {
-				const updatedMap = new Map(prev);
-				updatedMap.delete(key);
-				return updatedMap;
-			});
-		});
-		return () => {
-			socket.disconnect();
-		};
-	}, []);
 
 	return (
 		<div className="flex-row p-[10vh]">
 			<h1>All Rooms</h1>
 			<button onClick={() => setVisible(!getVisible)}>Add Room</button>
-			<div className="grid gap-2">
-				{[...getRooms.entries()].map(([key, room]) => (
-					<div
-						key={key}
-						className="w-auto mx-auto bg-gray-400/50 flex justify-around items-center"
-					>
-						<Link
-							href={`/mafia_room?utm_search=${key}`}
-							className="inline px-5"
-						>
-							{room.name}
-						</Link>
-						<div className="inline px-5">
-							{room.onlineCount}/{room.onlineMax}
-						</div>
-					</div>
-				))}
-			</div>
+			<RoomsElement />
 			{getVisible && (
 				<form className="flex flex-col" onSubmit={createRoom}>
 					<input
@@ -103,37 +54,68 @@ const Home = () => {
 						/>
 						<label className="w-2">{getMaxPlayers.toString()}</label>
 					</div>
-					<div className="flex m-auto">
-						{getBool && (
-							<input
-								required
-								onChange={(e) => setPassword(e.target.value)}
-								type="text"
-								value={getPassword}
-								placeholder="Password"
-								className="block bg-gray-400/50"
-							/>
-						)}
-						<input
-							onChange={() => {
-								setBool(!getBool);
-								setPassword("");
-							}}
-							type="checkbox"
-							id="CheckPAss"
-							checked={getBool}
-							className="block bg-gray-400/50"
-						/>
-						<label
-							htmlFor="CheckPAss"
-							className="bg-gray-400/50"
-						>
-							{getBool.toString()}
-						</label>
-					</div>
 					<input type="submit" value="submit" className="bg-gray-400/50" />
 				</form>
 			)}
+		</div>
+	);
+};
+
+const RoomsElement = () => {
+	const [getRooms, setRooms] = useState<Map<string, Room>>(new Map());
+	console.log('child')
+	useEffect(() => {
+		async function fetchRooms() {
+			const res = await fetch("http://localhost:3000/api/allrooms");
+			const data = await res.json();
+			console.log("Fetched rooms data:", data);
+			const updatedMap = new Map<string, Room>(Object.entries(data));
+			setRooms(updatedMap);
+		}
+		fetchRooms();
+		socket = io("http://localhost:3000");
+		socket.on("connect", () => {
+			console.log("Connected to WebSocket server!");
+		});
+		socket.on("room_created", (message: { key: string; room: Room }) => {
+			setRooms((prev) => {
+				const updatedMap = new Map(prev);
+				updatedMap.set(message.key, message.room)
+				return updatedMap
+			});
+		});
+		socket.on("deleteroom", (key: string) => {
+			setRooms((prev) => {
+				const updatedMap = new Map(prev);
+				updatedMap.delete(key);
+				return updatedMap;
+			});
+		});
+		return () => {
+			socket.disconnect();
+			console.log('disconected')
+		};
+	}, []);
+	return (
+		<div className="grid gap-2">
+			{[...getRooms.entries()].map(([key, room]) => (
+				(
+					<div
+						key={key}
+						className="w-auto mx-auto bg-gray-400/50 flex justify-around items-center"
+					>
+						<Link
+							href={`/mafia_room?utm_room=${key}`}
+							className="inline px-5"
+						>
+							{room.name}
+						</Link>
+						<div className="inline px-5">
+							{room.onlineCount}/{room.onlineMax}
+						</div>
+					</div>
+				) 
+			))}
 		</div>
 	);
 };
