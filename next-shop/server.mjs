@@ -45,12 +45,8 @@ app.prepare().then(() => {
   const io = new Server(httpServer)
 
   io.on("connection", (socket) => {
-		socket.on("message", ({ roomId, message }) => {
-			io.to(roomId).emit('message', `${socket.id}: ${message}`)
-		})
 		socket.on("createroom", (data) => {
 			const ID = v4()
-			socket.join(ID); 
 			const room = {
 				name: data.name,
 				onlineCount: 0,
@@ -64,6 +60,18 @@ app.prepare().then(() => {
 			io.emit("deleteroom", data)
 		});
   });
+	
+	const jsonString = fs.readFileSync(filePath, 'utf8');
+	const data = JSON.parse(jsonString);
+	Object.keys(data).forEach((roomID) => {
+		io.of(`/${roomID}`).on("connection", (socket) => {
+			console.log("conected to the popipipo")
+			socket.on("message", (data) => {
+				console.log(`room: ${roomID}\n mesagge recived: `, data)
+				io.of(`/${roomID}`).emit('message_recived', { from: data.from, message: data.message})
+			})
+		})}
+	)
 
   httpServer
     .once("error", (err) => {
