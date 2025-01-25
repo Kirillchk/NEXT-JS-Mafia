@@ -6,25 +6,25 @@ import fs from 'fs';
 
 const filePath = './data/rooms.json'
 
-function addKeyValueToJSON(filePath, key, value) {
+function addKeyValueToJSON(Path, key, value) {
 	try {
-		const jsonString = fs.readFileSync(filePath, 'utf8');
+		const jsonString = fs.readFileSync(Path, 'utf8');
 		const data = JSON.parse(jsonString);
 		data[key] = value;
-		fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+		fs.writeFileSync(Path, JSON.stringify(data, null, 2));
 		console.log(`Key "${key}" added successfully.`);
 	} catch (err) {
 		console.error('Error updating JSON file:', err);
 	}
 }
-function deleteKeyFromJSON(filePath, key) {
+function deleteKeyFromJSON(Path, key) {
 	try {
-		const jsonString = fs.readFileSync(filePath, 'utf8');
+		const jsonString = fs.readFileSync(Path, 'utf8');
 		const data = JSON.parse(jsonString);
 
 		if (key in data) {
 			delete data[key];
-			fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+			fs.writeFileSync(Path, JSON.stringify(data, null, 2));
 			console.log(`Key "${key}" deleted successfully.`);
 		} else {
 			console.log(`Key "${key}" not found in the JSON file.`);
@@ -32,6 +32,15 @@ function deleteKeyFromJSON(filePath, key) {
 	} catch (err) {
 		console.error('Error updating JSON file:', err);
 	}
+}
+function createRoomNamespace(io, ID) {
+	io.of(`/${ID}`).on("connection", (socket) => {
+		console.log("conected to the popipipo")
+		socket.on("message", (data) => {
+			console.log(`room: ${ID}\n mesagge recived: `, data)
+			io.of(`/${ID}`).emit('message_recived', { from: data.from, message: data.message})
+		})
+	})
 }
 
 const dev = process.env.NODE_ENV !== "production"
@@ -53,6 +62,7 @@ app.prepare().then(() => {
 				onlineMax: data.onlineMax
 			}
 			addKeyValueToJSON(filePath, ID, room)
+			createRoomNamespace(io, ID)
 			io.emit("room_created", { key: ID, room: room})
 		});
 		socket.on("deleteroom", (data) => {
@@ -63,16 +73,7 @@ app.prepare().then(() => {
 	
 	const jsonString = fs.readFileSync(filePath, 'utf8');
 	const data = JSON.parse(jsonString);
-	Object.keys(data).forEach((roomID) => {
-		io.of(`/${roomID}`).on("connection", (socket) => {
-			console.log("conected to the popipipo")
-			socket.on("message", (data) => {
-				console.log(`room: ${roomID}\n mesagge recived: `, data)
-				io.of(`/${roomID}`).emit('message_recived', { from: data.from, message: data.message})
-			})
-		})}
-	)
-
+	Object.keys(data).forEach((roomID) => createRoomNamespace(io, roomID))
   httpServer
     .once("error", (err) => {
       console.error(err);
