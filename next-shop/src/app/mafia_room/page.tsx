@@ -114,7 +114,7 @@ Home () {
 	const [getMessage, setMessage] = useState<string>('')
 	const triggerEmit = () => {
 		if (socket) {
-			socket.emit("message", {from: "sperma", message: getMessage})
+			socket.emit("message", {from: "sperma", message: getMessage, to: "sperma"})
 		}
 	}
   return (

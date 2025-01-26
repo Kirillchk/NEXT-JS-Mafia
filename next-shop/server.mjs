@@ -38,7 +38,7 @@ function createRoomNamespace(io, ID) {
 		console.log("conected to the popipipo")
 		socket.on("message", (data) => {
 			console.log(`room: ${ID}\n mesagge recived: `, data)
-			io.of(`/${ID}`).emit('message_recived', { from: data.from, message: data.message})
+			io.of(`/${ID}`).emit('message_recived', { from: data.from, message: data.message, to: data.to })
 		})
 	})
 }
