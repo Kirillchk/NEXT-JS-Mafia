@@ -1,10 +1,8 @@
-import users from "../../../../data/users.json";
-
-export async function GET(request) {
+export async function POST(request) {
   try {
-    const usersObject = users
+		console.log('return of post ', request.body)	
 
-    return new Response(JSON.stringify(usersObject), {
+    return new Response('responce', {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
