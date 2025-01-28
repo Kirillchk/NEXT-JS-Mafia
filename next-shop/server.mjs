@@ -2,37 +2,10 @@ import { createServer } from "node:http"
 import next from "next"
 import { Server } from "socket.io"
 import { v4 } from 'uuid'
-import fs from 'fs';
+import { addKeyValueToJSON, deleteKeyFromJSON} from './src/data/manage.mjs'
 
-const filePath = './data/rooms.json'
+const filePath = './src/data/rooms.json'
 
-function addKeyValueToJSON(Path, key, value) {
-	try {
-		const jsonString = fs.readFileSync(Path, 'utf8');
-		const data = JSON.parse(jsonString);
-		data[key] = value;
-		fs.writeFileSync(Path, JSON.stringify(data, null, 2));
-		console.log(`Key "${key}" added successfully.`);
-	} catch (err) {
-		console.error('Error updating JSON file:', err);
-	}
-}
-function deleteKeyFromJSON(Path, key) {
-	try {
-		const jsonString = fs.readFileSync(Path, 'utf8');
-		const data = JSON.parse(jsonString);
-
-		if (key in data) {
-			delete data[key];
-			fs.writeFileSync(Path, JSON.stringify(data, null, 2));
-			console.log(`Key "${key}" deleted successfully.`);
-		} else {
-			console.log(`Key "${key}" not found in the JSON file.`);
-		}
-	} catch (err) {
-		console.error('Error updating JSON file:', err);
-	}
-}
 function createRoomNamespace(io, ID) {
 	io.of(`/${ID}`).on("connection", (socket) => {
 		console.log("conected to the popipipo")
@@ -42,7 +15,6 @@ function createRoomNamespace(io, ID) {
 		})
 	})
 }
-
 const dev = process.env.NODE_ENV !== "production"
 const hostname = "localhost"
 const port = 3000

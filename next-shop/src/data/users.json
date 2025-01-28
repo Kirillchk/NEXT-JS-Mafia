@@ -1,0 +1,14 @@
+{
+  "miau": {
+    "password": "nedopohui",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiNDgyODAiLCJpYXQiOjE3MzgwNDA2NjF9.Cjq-LLLOZQ0E-8FaxXBWjnT8t4fk8Ig5atCATlh02Zo"
+  },
+  "suka2": {
+    "password": "nohui",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiNTY4MjgwIiwiaWF0IjoxNzM4MDQzODEyfQ.DtEv4uaahSDTh-9NjyCZmHjJIxMSP0cwnS8Dsl3yxKM"
+  },
+  "suka3": {
+    "password": "nohui",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMzkyODAiLCJpYXQiOjE3MzgwNDQyMjV9.JTGlopP8v1azfirLJ0c0jFz_G0oVhZRmDaTBX10ovEA"
+  }
+}
