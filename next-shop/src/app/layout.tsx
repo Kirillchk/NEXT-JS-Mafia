@@ -12,20 +12,21 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
 			<body>
 			<div className="main_background"></div>
 				{
-					getShowSite ?
+					//getShowSite ?
 					<>
 						{children}
-					</>:
-					<>
-						<form action={(form) => {
-							const name = form.get('userNickname') as string || ''
-							localStorage.setItem('userNickname', name)
-							console.log(name)
-						}}>
-							<input required type="text" name="userNickname"/>
-							<input type="submit" />
-						</form>
 					</>
+					//:
+					//<>
+					//	<form action={(form) => {
+					//		const name = form.get('userNickname') as string || ''
+					//		localStorage.setItem('userNickname', name)
+					//		console.log(name)
+					//	}}>
+					//		<input required type="text" name="userNickname"/>
+					//		<input type="submit" />
+					//	</form>
+					//</>
 				}
 			</body>			
     </html>

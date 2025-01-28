@@ -34,3 +34,12 @@ export function hasEntries(Path, entry){
 		console.error('Error updating JSON file:', err);
 	}
 }
+export function returnDataObjectByKey(Path, key){
+	try {
+		const jsonString = fs.readFileSync(Path, 'utf8');
+		const data = JSON.parse(jsonString);
+		return data[key]
+	} catch (err) {
+		console.error('Error updating JSON file:', err);
+	}
+}

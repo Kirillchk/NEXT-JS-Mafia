@@ -94,7 +94,7 @@ Home () {
 	useEffect(() => {	
 		const utmSource = searchParams.get('utm_room');
 		if (!socket){
-			socket = io(`http://localhost:3000/${utmSource}`);
+			socket = io(`http://localhost:3000/${utmSource}`, {auth: { token: 'sissi'}});
 			socket.on("connect", () => {
 				console.log("Connected to WebSocket server!");
 			});

@@ -1,5 +1,6 @@
-import { createServer } from "node:http"
 import next from "next"
+import fs from 'fs'
+import { createServer } from "node:http"
 import { Server } from "socket.io"
 import { v4 } from 'uuid'
 import { addKeyValueToJSON, deleteKeyFromJSON} from './src/data/manage.mjs'
@@ -8,7 +9,10 @@ const filePath = './src/data/rooms.json'
 
 function createRoomNamespace(io, ID) {
 	io.of(`/${ID}`).on("connection", (socket) => {
-		console.log("conected to the popipipo")
+		console.log("conected to the popipipo", socket.handshake.auth)
+		if( socket.handshake.auth.token === 'sisi'){
+			return
+		}
 		socket.on("message", (data) => {
 			console.log(`room: ${ID}\n mesagge recived: `, data)
 			io.of(`/${ID}`).emit('message_recived', { from: data.from, message: data.message, to: data.to })
