@@ -88,13 +88,16 @@ interface message {
 	from: string,
 	message: string
 }
-export default function 
+export default function
 Home () {
 	const searchParams = useSearchParams();
 	useEffect(() => {	
 		const utmSource = searchParams.get('utm_room');
 		if (!socket){
-			socket = io(`http://localhost:3000/${utmSource}`, {auth: { token: 'sissi'}});
+			socket = io(`http://localhost:3000/${utmSource}`, {auth: { 
+				username: 'fasdas',
+				password: ''
+			}});
 			socket.on("connect", () => {
 				console.log("Connected to WebSocket server!");
 			});
@@ -103,18 +106,18 @@ Home () {
 				setChat((perv) => [...perv, data])
 			})
 		}
-    return () => {
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
-    };
+		return () => {
+			if (socket) {
+				socket.disconnect();
+				socket = null;
+			}
+		};
 	}, [])
 	const [getChat, setChat] = useState<Array<message>>([])	
 	const [getMessage, setMessage] = useState<string>('')
 	const triggerEmit = () => {
 		if (socket) {
-			socket.emit("message", {from: "sperma", message: getMessage, to: "sperma"})
+			socket.emit("message", { from: "sperma", message: getMessage, to: "sperma", JWT: '' })
 		}
 	}
   return (
@@ -147,6 +150,6 @@ Home () {
 				</div>
 			))}
 		</aside>
-  </div>
+	</div>
 	)
 };

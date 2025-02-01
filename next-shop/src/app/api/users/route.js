@@ -1,6 +1,6 @@
 import users from '../../../data/users.json'
 
-export async function GET(request) {
+export async function GET() {
   try {
     const usersObject = users
 

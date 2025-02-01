@@ -3,19 +3,24 @@ import fs from 'fs'
 import { createServer } from "node:http"
 import { Server } from "socket.io"
 import { v4 } from 'uuid'
-import { addKeyValueToJSON, deleteKeyFromJSON} from './src/data/manage.mjs'
+import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey } from './src/data/manage.mjs'
 
 const filePath = './src/data/rooms.json'
 
 function createRoomNamespace(io, ID) {
 	io.of(`/${ID}`).on("connection", (socket) => {
-		console.log("conected to the popipipo", socket.handshake.auth)
-		if( socket.handshake.auth.token === 'sisi'){
+		console.log("conected to the popipipo", )
+		const authData = socket.handshake.auth 
+		const userData = returnDataObjectByKey(filePath, authData.username) 
+		if( authData.password != userData.password ){
 			return
 		}
 		socket.on("message", (data) => {
+			if (data.JWT != userData.JWT){ 
+				return 
+			}
 			console.log(`room: ${ID}\n mesagge recived: `, data)
-			io.of(`/${ID}`).emit('message_recived', { from: data.from, message: data.message, to: data.to })
+			io.of(`/${ID}`).emit('message_recived', { from: authData.username, message: data.message, to: data.to })
 		})
 	})
 }

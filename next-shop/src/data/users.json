@@ -10,5 +10,17 @@
   "suka3": {
     "password": "nohui",
     "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMzkyODAiLCJpYXQiOjE3MzgwNDQyMjV9.JTGlopP8v1azfirLJ0c0jFz_G0oVhZRmDaTBX10ovEA"
+  },
+  "undefined": {
+    "password": "asd",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiNDkyMTEiLCJpYXQiOjE3MzgzNjczNjd9.fGCoj4f3X785OBdKqdoWxtTdktDcDkTDlT6gSINsHIU"
+  },
+  "sws": {
+    "password": "asd",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMzEzMTEiLCJpYXQiOjE3MzgzNjk5MTF9.m1aPMZvI8TPPmFYxE2cj_bsYwOX4D1cRzJKxt_yK1ds"
+  },
+  "as": {
+    "password": "asd",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiNDEzMTEiLCJpYXQiOjE3MzgzNzA1MTF9.gPdG6k7TZx6CG_53elCJw0CULntGXnBP4Rwhm2AI3ZQ"
   }
 }
