@@ -31,8 +31,6 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
 					<form action={async (form) => {
 						const username = form.get('userNickname') as string || ''
 						const password = form.get('userPassword') as string || ''
-						localStorage.setItem('userNickname', username)
-						localStorage.setItem('userPassword', password)
 						const userData = { username, password }
 						console.log(userData)
 						if (getSubmitLogin) {
@@ -45,6 +43,8 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
 							})
 							const data = await res.json()
 							localStorage.setItem('JWT', data.JWT)
+							localStorage.setItem('userNickname', username)
+							localStorage.setItem('userPassword', password)
 						} else {
 							const res = await fetch('http://localhost:3000/api/users/createuser', {
 								method: 'POST',
@@ -55,7 +55,11 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
 							})
 							const data = await res.json()
 							localStorage.setItem('JWT', data.JWT)
-						}}}>
+							localStorage.setItem('userNickname', username)
+							localStorage.setItem('userPassword', password)
+						}
+						setShowSite(true)
+						}}>
 						<input required type="text" name="userPassword" placeholder="Password"/>
 						<input required type="text" name="userNickname" placeholder="Login"/>
 						<input type="submit" />

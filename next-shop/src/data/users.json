@@ -22,5 +22,9 @@
   "as": {
     "password": "asd",
     "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiNDEzMTEiLCJpYXQiOjE3MzgzNzA1MTF9.gPdG6k7TZx6CG_53elCJw0CULntGXnBP4Rwhm2AI3ZQ"
+  },
+  "dfs": {
+    "password": "sdf",
+    "JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjQ3MjEiLCJpYXQiOjE3Mzg0NzAyOTd9.R_nbkNm_UcxU-FHVj8QRJCtgmfYzcRruH8Yu6wKBBnE"
   }
 }

@@ -95,8 +95,8 @@ Home () {
 		const utmSource = searchParams.get('utm_room');
 		if (!socket){
 			socket = io(`http://localhost:3000/${utmSource}`, {auth: { 
-				username: 'fasdas',
-				password: ''
+				username: userName,
+				password: password
 			}});
 			socket.on("connect", () => {
 				console.log("Connected to WebSocket server!");
@@ -115,9 +115,14 @@ Home () {
 	}, [])
 	const [getChat, setChat] = useState<Array<message>>([])	
 	const [getMessage, setMessage] = useState<string>('')
+
+	const userName = localStorage.getItem("userNickname")
+	const password = localStorage.getItem('userPassword')
+	const JWT = localStorage.getItem('JWT')
+
 	const triggerEmit = () => {
 		if (socket) {
-			socket.emit("message", { from: "sperma", message: getMessage, to: "sperma", JWT: '' })
+			socket.emit("message", { from: userName, message: getMessage, to: "sperma", JWT: JWT })
 		}
 	}
   return (
