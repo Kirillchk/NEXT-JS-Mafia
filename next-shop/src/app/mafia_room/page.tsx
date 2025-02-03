@@ -49,28 +49,30 @@
 //		from: "sease"
 //	},
 //]
-const getpeople = [
-	{
-		nickname: "ses",
-		color: "red"
-	},
-	{
-		nickname: "ses2",
-		color: "red"
-	},
-	{
-		nickname: "ses3",
-		color: "red"
-	},
-	{
-		nickname: "ses4",
-		color: "red"
-	},
-	{
-		nickname: "ses5",
-		color: "red"
-	},
-]
+
+//const getpeople = [
+//	{
+//		nickname: "ses",
+//		color: "red"
+//	},
+//	{
+//		nickname: "ses2",
+//		color: "red"
+//	},
+//	{
+//		nickname: "ses3",
+//		color: "red"
+//	},
+//	{
+//		nickname: "ses4",
+//		color: "red"
+//	},
+//	{
+//		nickname: "ses5",
+//		color: "red"
+//	},
+//]
+
 const getroles = {
 	doctors: 2,
 	fuflo: 1,
@@ -105,6 +107,9 @@ Home () {
 				console.log(data);
 				setChat((perv) => [...perv, data])
 			})
+			socket.on('player list update', (data) => {
+				setPeople(data.users)
+			})
 		}
 		return () => {
 			if (socket) {
@@ -115,6 +120,7 @@ Home () {
 	}, [])
 	const [getChat, setChat] = useState<Array<message>>([])	
 	const [getMessage, setMessage] = useState<string>('')
+	const [getPeople, setPeople] = useState<string[]>([])
 
 	const userName = localStorage.getItem("userNickname")
 	const password = localStorage.getItem('userPassword')
@@ -149,9 +155,9 @@ Home () {
 			))}
 		</span>
 		<aside className="h-[100vh] w-[20vw]">
-			{getpeople.map((player, index) => (
+			{getPeople.map((player, index) => (
 				<div className="overflow-clip" key={index}>
-					{player.nickname}: {player.color}
+					{player}
 				</div>
 			))}
 		</aside>

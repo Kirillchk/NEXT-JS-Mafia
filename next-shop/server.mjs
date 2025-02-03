@@ -9,6 +9,7 @@ const filePathrooms = './src/data/rooms.json'
 const filePathUsers = './src/data/users.json'
 
 function createRoomNamespace(io, ID) {
+	let playersList = []
 	io.of(`/${ID}`).on("connection", (socket) => {
 		const authData = socket.handshake.auth 
 		const userData = returnDataObjectByKey(filePathUsers, authData.username) 
@@ -16,6 +17,10 @@ function createRoomNamespace(io, ID) {
 		if( authData.password != userData.password ){
 			return
 		}
+		if (!playersList.includes(authData.username)){
+			playersList.push(authData.username)
+		}
+		io.of(`/${ID}`).emit('player list update', { users: playersList })
 		socket.on("message", (data) => {
 			if (data.JWT != userData.JWT){ 
 				return 
