@@ -43,3 +43,15 @@ export function returnDataObjectByKey(Path, key){
 		console.error('Error updating JSON file:', err);
 	}
 }
+export function VerifyJWT(Path, username, JWT){
+	try {
+		if (!username || !JWT){
+			return false
+		}
+		const jsonString = fs.readFileSync(Path, 'utf8');
+		const data = JSON.parse(jsonString);
+		return data[username].JWT == JWT
+	} catch (err) {
+		console.error('Error updating JSON file:', err);
+	}
+}

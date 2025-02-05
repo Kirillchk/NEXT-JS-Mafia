@@ -23,10 +23,11 @@ const Home = () => {
 		const data = {
 			name: getRoomName,
 			onlineMax: getMaxPlayers,
-		};
-		socket.emit("createroom", data);
-		//// Do not clear state immediately to avoid re-render affecting the form
-	};
+			userName: localStorage.getItem("userNickname"),
+			JWT: localStorage.getItem('JWT')
+		}
+		socket.emit("createroom", data)
+	}
 
 	return (
 		<div className="flex-row p-[10vh]">

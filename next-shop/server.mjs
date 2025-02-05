@@ -3,7 +3,7 @@ import fs from 'fs'
 import { createServer } from "node:http"
 import { Server } from "socket.io"
 import { v4 } from 'uuid'
-import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey } from './src/data/manage.mjs'
+import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey, VerifyJWT } from './src/data/manage.mjs'
 
 const filePathrooms = './src/data/rooms.json'
 const filePathUsers = './src/data/users.json'
@@ -13,8 +13,9 @@ function createRoomNamespace(io, ID) {
 	io.of(`/${ID}`).on("connection", (socket) => {
 		const authData = socket.handshake.auth 
 		const userData = returnDataObjectByKey(filePathUsers, authData.username) 
+		const roomData = returnDataObjectByKey(filePathrooms, ID);
 		console.log( authData )
-		if( authData.password != userData.password ){
+		if( authData.password != userData.password || roomData){
 			return
 		}
 		if (!playersList.includes(authData.username)){
@@ -42,11 +43,14 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
 		socket.on("createroom", (data) => {
+			if (!VerifyJWT(filePathUsers, data.userName, data.JWT)) {
+				return
+			}
 			const ID = v4()
 			const room = {
 				name: data.name,
 				onlineCount: 0,
-				onlineMax: data.onlineMax
+				onlineMax: Number(data.onlineMax)||5
 			}
 			addKeyValueToJSON(filePathrooms, ID, room)
 			createRoomNamespace(io, ID)
