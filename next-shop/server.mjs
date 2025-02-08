@@ -3,7 +3,7 @@ import fs from 'fs'
 import { createServer } from "node:http"
 import { Server } from "socket.io"
 import { v4 } from 'uuid'
-import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey, VerifyJWT } from './src/data/manage.mjs'
+import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey, VerifyJWT, UpdateInfo } from './src/data/manage.mjs'
 
 const filePathrooms = './src/data/rooms.json'
 const filePathUsers = './src/data/users.json'
@@ -13,14 +13,14 @@ function createRoomNamespace(io, ID) {
 	io.of(`/${ID}`).on("connection", (socket) => {
 		const authData = socket.handshake.auth 
 		const userData = returnDataObjectByKey(filePathUsers, authData.username) 
-		const roomData = returnDataObjectByKey(filePathrooms, ID);
-		console.log( authData )
-		if( authData.password != userData.password || roomData){
+		const roomData = returnDataObjectByKey(filePathrooms, ID)
+		UpdateInfo(filePathrooms, ID, { onlineCount: roomData.onlineCount+1 })
+		if( authData.password != userData.password || roomData.onlineCount >= roomData.onlineMax){
 			return
 		}
 		if (!playersList.includes(authData.username)){
 			playersList.push(authData.username)
-		}
+		} 
 		io.of(`/${ID}`).emit('player list update', { users: playersList })
 		socket.on("message", (data) => {
 			if (data.JWT != userData.JWT){ 
