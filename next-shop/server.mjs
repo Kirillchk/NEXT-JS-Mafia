@@ -8,49 +8,21 @@ import mongoose from "mongoose"
 
 const filePathrooms = './src/data/rooms.json'
 const filePathUsers = './src/data/users.json'
-mongoose.connect("mongodb://localhost:27017/mafia", {
-	useNewUrlParser: true,
-	useUnifiedTopology: true
-});
+mongoose.connect("mongodb://localhost:27017/mafia");
 const userSchema = new mongoose.Schema({
-	users: {
-		type: Map,
-		of: new mongoose.Schema({
-			password: { type: String, required: true },
-			JWT: { type: String, required: true }
-		})
-	}
+	_id: String,
+	password: String,
+	JWT: String
 });
 
-const UsersCollection = mongoose.model('user', userSchema)
+const UsersModel = mongoose.model('user', userSchema)
 
-try {
-	// Find existing document (or create one if it doesn't exist)
-	let usersDoc = await UsersCollection.findOne();
-	if (!usersDoc) {
-		usersDoc = new UsersCollection({ users: {} });
-	}
-
-	// Add a new user
-	usersDoc.users.set("miau", {
-		password: "nedopohui",
-		JWT: "eyJhbGciOiJIUzI1NiIsInR5c..."
-	});
-
-	usersDoc.users.set("suka2", {
-		password: "nohui",
-		JWT: "eyJhbGciOiJIUzI1NiIsInR5c..."
-	});
-
-	// Save updated document
-	await usersDoc.save();
-
-	console.log("Updated Users:", usersDoc);
-} catch (error) {
-	console.error("Error updating users:", error);
-} finally {
-	mongoose.connection.close(); // Close connection
-}
+const user = new UsersModel({
+	_id: 'fsfsdf',
+	password: 'neswsew',
+	JWT: 'adfhashf'
+})
+user.save()
 
 function createRoomNamespace(io, ID) {
 	let playersList = []
