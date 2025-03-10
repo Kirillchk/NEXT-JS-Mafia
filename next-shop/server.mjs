@@ -4,25 +4,12 @@ import { createServer } from "node:http"
 import { Server } from "socket.io"
 import { v4 } from 'uuid'
 import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey, VerifyJWT, UpdateInfo } from './src/data/manage.mjs'
-import mongoose from "mongoose"
+import { UserSave, UserFind, UserVerifyJWT } from './src/data/models.mjs'
 
 const filePathrooms = './src/data/rooms.json'
 const filePathUsers = './src/data/users.json'
-mongoose.connect("mongodb://localhost:27017/mafia");
-const userSchema = new mongoose.Schema({
-	_id: String,
-	password: String,
-	JWT: String
-});
 
-const UsersModel = mongoose.model('user', userSchema)
-
-const user = new UsersModel({
-	_id: 'fsfsdf',
-	password: 'neswsew',
-	JWT: 'adfhashf'
-})
-user.save()
+console.log(await UserVerifyJWT('12345672', '1111'))
 
 function createRoomNamespace(io, ID) {
 	let playersList = []
