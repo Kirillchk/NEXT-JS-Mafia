@@ -2,43 +2,52 @@ import mongoose from "mongoose"
 
 mongoose.connect("mongodb://localhost:27017/mafia");
 
-const UsersModel = mongoose.model('user',  
-	new mongoose.Schema({
-		username: {
-			type: String,
-			required: true,
-			unique: true,
-			minlength: 6,
-			maxlength: 36
-		},
-		password: {
-			type: String,
-			required: true,
-			minlength: 4,
-			maxlength: 16
-		},
-		JWT: {
-			type: String,
-			required: true,
-		}
-	}, { versionKey: false })
-)
+const userSchema = new mongoose.Schema({
+	username: {
+		type: String,
+		required: true,
+		unique: true,
+		minlength: 6,
+		maxlength: 36
+	},
+	password: {
+		type: String,
+		required: true,
+		minlength: 4,
+		maxlength: 16
+	},
+	JWT: {
+		type: String,
+		required: true,
+	}
+}, { versionKey: false })
 
-const RoomsModel = mongoose.model('room',  
-	new mongoose.Schema({
-		roomname: {
-			type: String,
-			required: true,
-			unique: true,
-		},
-		username: {
-			type: Number,
-			required: true,
-			min: 0,
-			max: 15
-		},
-	}, { versionKey: false })
-)
+const roomSchema = new mongoose.Schema({
+	roomname: {
+		type: String,
+		required: true,
+		unique: true,
+	},
+	online: {
+		type: Number,
+		required: true,
+		min: 0,
+		max: 15
+	},
+}, { versionKey: false })
+
+const UsersModel = mongoose.models.user || mongoose.model('user', userSchema);
+const RoomsModel = mongoose.models.room || mongoose.model('room', roomSchema);
+
+async function SavePrototype(model, object) {
+	try {
+		const record = new model(object)
+		await record.save()
+		return true
+	} catch (error) {
+		return false
+	}
+}
 
 export async function UserSave(newUser){
 	try {
@@ -56,7 +65,7 @@ export async function UserFind(username) {
 		return user
 	} catch (error) {
 		console.error('Error finding user:', error);
-		return null
+		return false
 	}
 }
 
@@ -69,9 +78,9 @@ export async function UserVerifyJWT(username, JWT) {
 	}
 }
 
-export async function RoomSave(newRoom) {
+export async function RoomSave(newUser){
 	try {
-		const room = new RoomsModel(newRoom)
+		const room = new RoomsModel(newUser)
 		await room.save()
 		return true
 	} catch (error) {
@@ -80,9 +89,9 @@ export async function RoomSave(newRoom) {
 }
 
 /**/
-export async function RoomFind(_id) {
+export async function RoomFind(roomname) {
 	try {
-		const room = await UsersModel.findById(_id);
+		const room = await UsersModel.findOne({ roomname: roomname});
 		return room
 	} catch (error) {
 		console.error('Error finding room:', error);
@@ -101,11 +110,25 @@ export async function RoomDelete(ID) {
 }
 
 /**/
-export async function RoomAddPlayer(params) {
-	
+export async function RoomAddPlayer(_id) {
+	const room = RoomFind(_id)
+	room.online += 1
+	try {
+		await RoomsModel.findByIdAndUpdate( {_id}, room)
+		return true
+	} catch (error) {
+		return false
+	}
 }
 
-
+export async function RoomsFindAll(){
+	try {
+		const rooms = await RoomsModel.find({})
+		return rooms
+	} catch (error) {
+		return null
+	}
+}
 
 
 

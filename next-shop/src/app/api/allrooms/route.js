@@ -1,10 +1,8 @@
-import rooms from '@/data/rooms.json'
+import { RoomsFindAll } from '@/data/models.mjs'
 
-export async function GET(request) {
+export async function GET() {
   try {
-    // Ensure rooms is an object; if it's a Map, convert it, else keep it as-is
-    const roomsObject = rooms instanceof Map ? Object.fromEntries(rooms) : rooms;
-
+    const roomsObject = await RoomsFindAll()
     return new Response(JSON.stringify(roomsObject), {
       status: 200,
       headers: { "Content-Type": "application/json" },

@@ -1,23 +1,15 @@
 import next from "next"
-import fs from 'fs'
 import { createServer } from "node:http"
 import { Server } from "socket.io"
-import { v4 } from 'uuid'
-import { addKeyValueToJSON, deleteKeyFromJSON, returnDataObjectByKey, VerifyJWT, UpdateInfo } from './src/data/manage.mjs'
-import { UserSave, UserFind, UserVerifyJWT } from './src/data/models.mjs'
-
-const filePathrooms = './src/data/rooms.json'
-const filePathUsers = './src/data/users.json'
-
-console.log(await UserVerifyJWT('12345672', '1111'))
+import { UserFind, UserVerifyJWT, RoomAddPlayer, RoomFind, RoomSave, RoomDelete, RoomsFindAll } from './src/data/models.mjs'
 
 function createRoomNamespace(io, ID) {
 	let playersList = []
 	io.of(`/${ID}`).on("connection", (socket) => {
 		const authData = socket.handshake.auth 
-		const userData = returnDataObjectByKey(filePathUsers, authData.username) 
-		const roomData = returnDataObjectByKey(filePathrooms, ID)
-		UpdateInfo(filePathrooms, ID, { onlineCount: roomData.onlineCount+1 })
+		const userData = UserFind(authData.username) 
+		const roomData = RoomFind(ID)
+		RoomAddPlayer(ID)
 		if( authData.password != userData.password || roomData.onlineCount >= roomData.onlineMax){
 			return
 		}
@@ -45,29 +37,32 @@ app.prepare().then(() => {
   const io = new Server(httpServer)
 
   io.on("connection", (socket) => {
-		socket.on("createroom", (data) => {
-			if (!VerifyJWT(filePathUsers, data.userName, data.JWT)) {
+		socket.on("createroom", async (data) => {
+			const room = {
+				roomname: data.roomname,
+				online: 0,
+			}
+			const result = await RoomSave(room)
+			const verified = await UserVerifyJWT(data.userName, data.JWT) 
+			console.log('result', !result, 'verified', !verified)
+			if (!verified || !result) {
+				console.log('returning')
 				return
 			}
-			const ID = v4()
-			const room = {
-				name: data.name,
-				onlineCount: 0,
-				onlineMax: Number(data.onlineMax)||5
-			}
-			addKeyValueToJSON(filePathrooms, ID, room)
-			createRoomNamespace(io, ID)
-			io.emit("room_created", { key: ID, room: room})
+			console.log('not returning')
+			createRoomNamespace(io, room.roomname)
+			io.emit("room_created", { key: room.roomname, room: room})
 		});
 		socket.on("deleteroom", (data) => {
-			deleteKeyFromJSON(filePathrooms, data.ID)
+			RoomDelete(data.ID)
 			io.emit("deleteroom", data)
 		});
   });
-	
-	const jsonString = fs.readFileSync(filePathrooms, 'utf8');
-	const data = JSON.parse(jsonString);
-	Object.keys(data).forEach((roomID) => createRoomNamespace(io, roomID))
+	RoomsFindAll().then(
+		(data) => data.forEach(
+			(room) => createRoomNamespace(io, room.roomname)
+		)
+	)
   httpServer
     .once("error", (err) => {
       console.error(err);

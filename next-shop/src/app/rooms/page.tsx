@@ -4,29 +4,27 @@ import { useState, useEffect } from "react";
 import io, { Socket } from "socket.io-client";
 
 interface Room {
-	name: string;
-	onlineCount: number;
-	onlineMax: number;
+	_id: object
+	roomname: string;
+	online: number;
 }
 var socket: Socket;
 
 const Home = () => {
-	console.log('parent')
-	const [getBool, setBool] = useState<boolean>(true);
-
 	const [getRoomName, setRoomName] = useState<string>("");
 	const [getMaxPlayers, setMaxPlayers] = useState<string>("5");
 	const [getVisible, setVisible] = useState<boolean>(false);
 
 	const createRoom = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault(); // Prevents default form behavior
+		console.log('creating room')
 		const data = {
-			name: getRoomName,
-			onlineMax: getMaxPlayers,
+			roomname: getRoomName,
 			userName: localStorage.getItem("userNickname"),
 			JWT: localStorage.getItem('JWT')
 		}
 		socket.emit("createroom", data)
+		console.log('created room', data)
 	}
 
 	return (
@@ -80,6 +78,7 @@ const RoomsElement = () => {
 		});
 		socket.on("room_created", (message: { key: string; room: Room }) => {
 			setRooms((prev) => {
+				console.log('updating rooms', message)
 				const updatedMap = new Map(prev);
 				updatedMap.set(message.key, message.room)
 				return updatedMap
@@ -106,13 +105,13 @@ const RoomsElement = () => {
 						className="w-auto mx-auto bg-gray-400/50 flex justify-around items-center"
 					>
 						<Link
-							href={`/mafia_room?utm_room=${key}`}
+							href={`/mafia_room?utm_room=${room.roomname}`}
 							className="inline px-5"
 						>
-							{room.name}
+							{room.roomname}
 						</Link>
 						<div className="inline px-5">
-							{room.onlineCount}/{room.onlineMax}
+							{room.online}/15
 						</div>
 					</div>
 				) 
