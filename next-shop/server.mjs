@@ -51,10 +51,12 @@ app.prepare().then(() => {
 			}
 			console.log('not returning')
 			createRoomNamespace(io, room.roomname)
+			console.log('creating a room')
 			io.emit("room_created", { key: room.roomname, room: room})
 		});
 		socket.on("deleteroom", (data) => {
 			RoomDelete(data.ID)
+			console.log('deleting a room')
 			io.emit("deleteroom", data)
 		});
   });

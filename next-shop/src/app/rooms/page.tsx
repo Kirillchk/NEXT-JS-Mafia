@@ -62,21 +62,20 @@ const Home = () => {
 
 const RoomsElement = () => {
 	const [getRooms, setRooms] = useState<Map<string, Room>>(new Map());
-	console.log('child')
 	useEffect(() => {
 		async function fetchRooms() {
 			const res = await fetch("http://localhost:3000/api/allrooms");
 			const data = await res.json();
-			console.log("Fetched rooms data:", data);
 			const updatedMap = new Map<string, Room>(Object.entries(data));
 			setRooms(updatedMap);
 		}
 		fetchRooms();
-		socket = io("http://localhost:3000");
+		socket = socket||io("http://localhost:3000");
 		socket.on("connect", () => {
 			console.log("Connected to WebSocket server!");
 		});
 		socket.on("room_created", (message: { key: string; room: Room }) => {
+			console.log("room created triggered")
 			setRooms((prev) => {
 				console.log('updating rooms', message)
 				const updatedMap = new Map(prev);
@@ -84,17 +83,15 @@ const RoomsElement = () => {
 				return updatedMap
 			});
 		});
-		socket.on("deleteroom", (key: string) => {
+		socket.on("deleteroom", (message: { ID: string; }) => {
+			console.log("deleteroom triggered")
 			setRooms((prev) => {
+				console.log('deleting')
 				const updatedMap = new Map(prev);
-				updatedMap.delete(key);
+				updatedMap.delete(message.ID);
 				return updatedMap;
 			});
 		});
-		return () => {
-			socket.disconnect();
-			console.log('disconected')
-		};
 	}, []);
 	return (
 		<div className="grid gap-2">

@@ -100,9 +100,9 @@ export async function RoomFind(roomname) {
 }
 
 /**/
-export async function RoomDelete(ID) {
+export async function RoomDelete(roomname) {
 	try {
-		await RoomsModel.findByIdAndDelete(ID)
+		await RoomsModel.findOneAndDelete({roomname: roomname})
 		return true
 	} catch (error) {
 		return false
