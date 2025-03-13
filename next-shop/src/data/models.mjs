@@ -39,16 +39,6 @@ const roomSchema = new mongoose.Schema({
 const UsersModel = mongoose.models.user || mongoose.model('user', userSchema);
 const RoomsModel = mongoose.models.room || mongoose.model('room', roomSchema);
 
-async function SavePrototype(model, object) {
-	try {
-		const record = new model(object)
-		await record.save()
-		return true
-	} catch (error) {
-		return false
-	}
-}
-
 export async function UserSave(newUser){
 	try {
 		const user = new UsersModel(newUser)
@@ -88,7 +78,6 @@ export async function RoomSave(newUser){
 	}
 }
 
-/**/
 export async function RoomFind(roomname) {
 	try {
 		const room = await UsersModel.findOne({ roomname: roomname});
@@ -99,7 +88,6 @@ export async function RoomFind(roomname) {
 	}
 }
 
-/**/
 export async function RoomDelete(roomname) {
 	try {
 		await RoomsModel.findOneAndDelete({roomname: roomname})
@@ -109,7 +97,6 @@ export async function RoomDelete(roomname) {
 	}
 }
 
-/**/
 export async function RoomAddPlayer(_id) {
 	const room = RoomFind(_id)
 	room.online += 1
@@ -129,8 +116,3 @@ export async function RoomsFindAll(){
 		return null
 	}
 }
-
-
-
-
-

@@ -4,6 +4,7 @@ import { Server } from "socket.io"
 import { UserFind, UserVerifyJWT, RoomAddPlayer, RoomFind, RoomSave, RoomDelete, RoomsFindAll } from './src/data/models.mjs'
 
 function createRoomNamespace(io, ID) {
+	console.log('creating a room namespace', ID)
 	let playersList = []
 	io.of(`/${ID}`).on("connection", (socket) => {
 		const authData = socket.handshake.auth 

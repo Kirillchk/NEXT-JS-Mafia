@@ -21,6 +21,7 @@ Home () {
 	const searchParams = useSearchParams();
 	useEffect(() => {	
 		const utmSource = searchParams.get('utm_room');
+		console.log(`http://localhost:3000/${utmSource}`)
 		if (!socket){
 			socket = io(`http://localhost:3000/${utmSource}`, {auth: { 
 				username: userName,
@@ -54,8 +55,9 @@ Home () {
 
 	const triggerEmit = () => {
 		if (socket) {
-			socket.emit("message", { from: userName, message: getMessage, to: "sperma", JWT: JWT })
+			socket.emit("message", { from: userName, message: getMessage, to: "wwwwwwwww", JWT: JWT })
 		}
+		console.log('asdfg')
 	}
   return (
 	<div className="flex justify-between">
