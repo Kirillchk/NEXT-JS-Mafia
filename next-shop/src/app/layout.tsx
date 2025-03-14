@@ -5,7 +5,6 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
   	const [getShowSite, setShowSite] = useState<boolean>(false)
 	useEffect(()=>{
 		setShowSite(!!localStorage.getItem("userNickname"))
-		console.log(localStorage.getItem("userNickname"))
 	}, [])
 	return (
     <html lang="en">

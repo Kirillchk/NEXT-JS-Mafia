@@ -34,6 +34,10 @@ const roomSchema = new mongoose.Schema({
 		min: 0,
 		max: 15
 	},
+	AdminJWT: {
+		type: String,
+		required: true,
+	},
 }, { versionKey: false })
 
 const UsersModel = mongoose.models.user || mongoose.model('user', userSchema);
@@ -51,7 +55,7 @@ export async function UserSave(newUser){
 
 export async function UserFind(username) {
 	try {
-		const user = await UsersModel.findOne({ username }).exec();
+		const user = await UsersModel.findOne({ username: username }).exec();
 		return user
 	} catch (error) {
 		console.error('Error finding user:', error);
@@ -80,7 +84,7 @@ export async function RoomSave(newUser){
 
 export async function RoomFind(roomname) {
 	try {
-		const room = await UsersModel.findOne({ roomname: roomname});
+		const room = await RoomsModel.findOne({ roomname: roomname}).exec();
 		return room
 	} catch (error) {
 		console.error('Error finding room:', error);
