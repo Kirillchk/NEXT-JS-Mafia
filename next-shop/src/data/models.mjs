@@ -102,10 +102,21 @@ export async function RoomDelete(roomname) {
 }
 
 export async function RoomAddPlayer(_id) {
-	const room = RoomFind(_id)
+	const room = await RoomFind(_id)
 	room.online += 1
 	try {
-		await RoomsModel.findByIdAndUpdate( {_id}, room)
+		await RoomsModel.findByIdAndUpdate( {_id:room._id}, room)
+		return true
+	} catch (error) {
+		return false
+	}
+}
+
+export async function RoomRemovePlayer(_id) {
+	const room = await RoomFind(_id)
+	room.online -= 1
+	try {
+		await RoomsModel.findByIdAndUpdate( {_id:room._id}, room)
 		return true
 	} catch (error) {
 		return false

@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import io, { Socket } from "socket.io-client";
 let socket: Socket | null = null;
+let socketMessages: Socket | null = null;
 
 interface message {
 	from: string,
@@ -21,34 +22,47 @@ export default function Home() {
 	const [getChat, setChat] = useState<Array<message>>([]);
 	const [getMessage, setMessage] = useState<string>('');
 	const [getPeople, setPeople] = useState<string[]>([]);
-	const [userName, setUserName] = useState<string | null>(null);
-	const [password, setPassword] = useState<string | null>(null);
-	const [JWT, setJWT] = useState<string | null>(null);
-	useEffect(() => {
-		setUserName(localStorage.getItem("userNickname"));
-		setPassword(localStorage.getItem('userPassword'));
-		setJWT(localStorage.getItem('JWT'));
-	}, []);
 
-	useEffect(() => {
+	async function conectToRoom(){
 		const utmSource = searchParams.get('utm_room');
-		if (!socket && userName && password) {
-			socket = io(`http://localhost:3000/${utmSource}`, {
-				auth: {
-					username: userName,
-					password: password
-				}
+		let password = localStorage.getItem('userPassword')
+		let username = localStorage.getItem("userNickname")
+		console.log('trying to connect to', `http://localhost:3000/room${utmSource} auth:${ username } ${password}`)
+		socket = io(`http://localhost:3000/room${utmSource}`, {
+			auth: {
+				username: username,
+				password: password
+			}
+		});
+		
+		socket.on("connect", () => {
+			console.log("Connected to WebSocket server!");
+			if (!socketMessages) {
+				conectToChat()
+			}
+		});
+		// ???????????????????
+		socket.on('message_recived', (data) => {
+			console.log(data);
+			//setChat((prev) => [...prev, data]);
+		});
+		//socket.on('player list update', (data) => {
+		//	setPeople(data.users);
+		//});
+	}
+	async function conectToChat(){
+		socketMessages = io(`http://localhost:3000/${searchParams.get('utm_room')}/${localStorage.getItem("userNickname")}`)
+			socketMessages.on("connect", () => {
+				console.log("established message socket");
 			});
-			socket.on("connect", () => {
-				console.log("Connected to WebSocket server!");
-			});
-			socket.on('message_recived', (data) => {
+			socketMessages.on('message_recived', (data) => {
 				console.log(data);
-				setChat((prev) => [...prev, data]);
+				//setChat((prev) => [...prev, data]);
 			});
-			socket.on('player list update', (data) => {
-				setPeople(data.users);
-			});
+	}
+	useEffect(() => {
+		if (!socket) {
+			conectToRoom()
 		}
 		return () => {
 			if (socket) {
@@ -57,13 +71,17 @@ export default function Home() {
 				console.log('disconnected')
 			}
 		};
-	}, [userName, password, searchParams]);
+	}, [searchParams]);
 
 	const triggerEmit = () => {
 		if (socket?.connected) {
-			socket.emit("message", { from: userName, message: getMessage, to: "wwwwwwwww", JWT: JWT });
+			socket.emit("message", { 
+				from: localStorage.getItem("userNickname"), 
+				message: getMessage, 
+				to: ["sdsuka3"], 
+				JWT: localStorage.getItem('JWT')});
 		}
-		console.log('triggered emit', socket?.connected);
+		console.log('socket conection is', socket?.connected);
 	};
 
 	return (
