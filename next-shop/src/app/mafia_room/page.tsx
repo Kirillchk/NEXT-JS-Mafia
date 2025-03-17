@@ -1,15 +1,8 @@
 'use client'
-const getroles = {
-	doctors: 2,
-	fuflo: 1,
-	mamsa: 0,
-	maasmsa: 0,
-	mafia: 10,
-	mama: 0,
-};
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import io, { Socket } from "socket.io-client";
+import { forwardRef, useImperativeHandle } from 'react';
 let socket: Socket | null = null;
 let socketMessages: Socket | null = null;
 
@@ -17,103 +10,220 @@ interface message {
 	from: string,
 	message: string
 }
+type Roles = {
+	mafia: number;
+	police: number;
+	doctor: number;
+	citizen: number;
+  };
+
 export default function Home() {
+	const timerRef = useRef<TimerHandle>(null); // Ref for the Timer component
 	const searchParams = useSearchParams();
 	const [getChat, setChat] = useState<Array<message>>([]);
 	const [getMessage, setMessage] = useState<string>('');
 	const [getPeople, setPeople] = useState<string[]>([]);
+	const [roles, setRoles] = useState<Roles>({
+		mafia: 2,
+		police: 1,
+		doctor: 1,
+		citizen: 2,
+	});
 
-	async function conectToRoom(){
+	const handleIncrement = (role: keyof Roles) => {
+	if (totalPlayers < 6) {
+		setRoles((prevRoles) => ({
+		...prevRoles,
+		[role]: prevRoles[role] + 1,
+		}));
+	}
+	};
+
+	const handleDecrement = (role: keyof Roles) => {
+	if (roles[role] > 0) {
+		setRoles((prevRoles) => ({
+		...prevRoles,
+		[role]: prevRoles[role] - 1,
+		}));
+	}
+	};
+
+	const totalPlayers = Object.values(roles).reduce((sum, count) => sum + count, 0);
+
+	async function conectToRoom() {
 		const utmSource = searchParams.get('utm_room');
-		let password = localStorage.getItem('userPassword')
-		let username = localStorage.getItem("userNickname")
-		console.log('trying to connect to', `http://localhost:3000/room${utmSource} auth:${ username } ${password}`)
+		let password = localStorage.getItem('userPassword');
+		let username = localStorage.getItem('userNickname');
+		console.log(
+			'trying to connect to',
+			`http://localhost:3000/room${utmSource} auth:${username} ${password}`
+		);
 		socket = io(`http://localhost:3000/room${utmSource}`, {
 			auth: {
-				username: username,
-				password: password
-			}
+			username: username,
+			password: password,
+			},
 		});
-		
-		socket.on("connect", () => {
-			console.log("Connected to WebSocket server!");
+
+		socket.on('connect', () => {
+			console.log('Connected to WebSocket server!');
 			if (!socketMessages) {
-				conectToChat()
+				conectToChat();
 			}
 		});
-		// ???????????????????
+
 		socket.on('message_recived', (data) => {
 			console.log(data);
-			//setChat((prev) => [...prev, data]);
+			// setChat((prev) => [...prev, data]);
 		});
-		//socket.on('player list update', (data) => {
-		//	setPeople(data.users);
-		//});
-	}
-	async function conectToChat(){
-		socketMessages = io(`http://localhost:3000/${searchParams.get('utm_room')}/${localStorage.getItem("userNickname")}`)
-			socketMessages.on("connect", () => {
-				console.log("established message socket");
-			});
-			socketMessages.on('message_recived', (data) => {
-				console.log(data);
-				//setChat((prev) => [...prev, data]);
-			});
-	}
-	useEffect(() => {
-		if (!socket) {
-			conectToRoom()
-		}
-		return () => {
-			if (socket) {
-				socket.disconnect();
-				socket = null;
-				console.log('disconnected')
+
+		socket.on('player list update', (data) => {
+			console.log('player list was updated',data)
+			setPeople(data.users);
+		});
+		socket.on('next', (data)=>{
+			console.log('next step is',data)
+			if (timerRef.current) {
+				timerRef.current.reset(); // Call the reset function in the Timer component
 			}
-		};
+		})
+		socket.on('start', ()=>{
+			console.log('game has started')
+			if (timerRef.current) {
+				timerRef.current.reset();
+			}
+		})
+	}
+
+	async function conectToChat() {
+	socketMessages = io(`http://localhost:3000/${searchParams.get('utm_room')}/${localStorage.getItem('userNickname')}`);
+	socketMessages.on('connect', () => {
+		console.log('established message socket');
+	});
+	socketMessages.on('message_recived', (data) => {
+		console.log(data);
+		// setChat((prev) => [...prev, data]);
+	});
+	}
+
+	const triggerReset = () => {
+	
+	};
+
+	useEffect(() => {
+	if (!socket) {
+		conectToRoom();
+	}
+	return () => {
+		if (socket) {
+			socket.disconnect();
+			socket = null;
+			console.log('disconnected');
+		}
+	};
 	}, [searchParams]);
 
 	const triggerEmit = () => {
 		if (socket?.connected) {
-			socket.emit("message", { 
-				from: localStorage.getItem("userNickname"), 
-				message: getMessage, 
-				to: ["sdsuka3"], 
-				JWT: localStorage.getItem('JWT')});
+			socket.emit('message', {
+			from: localStorage.getItem('userNickname'),
+			message: getMessage,
+			to: ['sdsuka3'],
+			JWT: localStorage.getItem('JWT'),
+			});
 		}
-		console.log('socket conection is', socket?.connected);
+		console.log('socket connection is', socket?.connected);
+	};
+
+	const triggerDebug = () => {
+		console.log('debug');
+		socket?.emit('start', roles);
 	};
 
 	return (
 		<div className="flex justify-between">
 			<aside className="h-[100vh] w-[20vw]">
-				<div className="overflow-y-scroll h-[90%]">
-					{getChat.map((message, index) => (
-						<div className="overflow-clip" key={index}>
-							{message.from}: {message.message}
-						</div>
-					))}
+			<div className="overflow-y-scroll h-[90%]">
+				{getChat.map((message, index) => (
+				<div className="overflow-clip" key={index}>
+					{message.from}: {message.message}
 				</div>
-				<div className='flex justify-between'>
-					<input type="text" onChange={(e) => { setMessage(e.target.value) }} className="bg-gray-400/50" />
-					<button onClick={triggerEmit}>Send</button>
-				</div>
+				))}
+			</div>
+			<div className="flex justify-between">
+				<input
+				type="text"
+				onChange={(e) => {
+					setMessage(e.target.value);
+				}}
+				className="bg-gray-400/50"
+				/>
+				<button onClick={triggerEmit}>Send</button>
+			</div>
 			</aside>
-			<span className="m-auto">
-				{Object.keys(getroles).map((role, index) => (
-					getroles[role as keyof typeof getroles] !== 0 &&
-					<div role={role} key={index}>
-						{role}: {getroles[role as keyof typeof getroles]}
-					</div>
-				))}
-			</span>
+			<div className="m-auto">
+			<Timer ref={timerRef} />
+			<h1>Role Selection</h1>
+			<p>Total Players: {totalPlayers} / 6</p>
+			{Object.entries(roles).map(([role, count]) => (
+				<div key={role}>
+				<span>
+					{role}: {count}
+				</span>
+				<button onClick={() => handleDecrement(role as keyof Roles)} disabled={count === 0}>
+					-
+				</button>
+				<button onClick={() => handleIncrement(role as keyof Roles)} disabled={totalPlayers >= 6}>
+					+
+				</button>
+				</div>
+			))}
+			<button onClick={triggerDebug}>Start</button>
+			<button onClick={triggerReset}>Reset</button>
+			</div>
+
 			<aside className="h-[100vh] w-[20vw]">
-				{getPeople.map((player, index) => (
-					<div className="overflow-clip" key={index}>
-						{player}
-					</div>
-				))}
+			{getPeople.map((player, index) => (
+				<div className="overflow-clip" key={index}>
+				{player}
+				</div>
+			))}
 			</aside>
 		</div>
 	);
 }
+
+
+// Define the type for the ref (optional but recommended for TypeScript)
+export type TimerHandle = {
+  reset: () => void;
+};
+
+const Timer = forwardRef<TimerHandle>((props, ref) => {
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  const reset = () => {
+    setTimeLeft(30); // Reset the timer to 30 seconds
+  };
+
+  // Expose the reset function to the parent via ref
+  useImperativeHandle(ref, () => ({
+    reset,
+  }));
+
+  useEffect(() => {
+    if (timeLeft === 0) return;
+
+    const timerId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(timerId); // Cleanup on unmount
+  }, [timeLeft]);
+
+  return (
+    <div>
+      <h1>Time Left: {timeLeft} seconds</h1>
+    </div>
+  );
+});
