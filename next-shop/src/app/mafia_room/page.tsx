@@ -15,11 +15,12 @@ type Roles = {
 	police: number;
 	doctor: number;
 	citizen: number;
-  };
+};
 
 export default function Home() {
 	const timerRef = useRef<TimerHandle>(null); // Ref for the Timer component
 	const searchParams = useSearchParams();
+	const [messageTo, setMessageTo] = useState<string[]>([])
 	const [getChat, setChat] = useState<Array<message>>([]);
 	const [getMessage, setMessage] = useState<string>('');
 	const [getPeople, setPeople] = useState<string[]>([]);
@@ -60,8 +61,8 @@ export default function Home() {
 		);
 		socket = io(`http://localhost:3000/room${utmSource}`, {
 			auth: {
-			username: username,
-			password: password,
+				username: username,
+				password: password,
 			},
 		});
 
@@ -70,11 +71,6 @@ export default function Home() {
 			if (!socketMessages) {
 				conectToChat();
 			}
-		});
-
-		socket.on('message_recived', (data) => {
-			console.log(data);
-			// setChat((prev) => [...prev, data]);
 		});
 
 		socket.on('player list update', (data) => {
@@ -126,10 +122,10 @@ export default function Home() {
 	const triggerEmit = () => {
 		if (socket?.connected) {
 			socket.emit('message', {
-			from: localStorage.getItem('userNickname'),
-			message: getMessage,
-			to: ['sdsuka3'],
-			JWT: localStorage.getItem('JWT'),
+				from: localStorage.getItem('userNickname'),
+				message: getMessage,
+				to: messageTo,
+				JWT: localStorage.getItem('JWT'),
 			});
 		}
 		console.log('socket connection is', socket?.connected);
@@ -185,7 +181,19 @@ export default function Home() {
 			<aside className="h-[100vh] w-[20vw]">
 			{getPeople.map((player, index) => (
 				<div className="overflow-clip" key={index}>
-				{player}
+					{player}
+					<input type="checkbox" name="" id="" onChange={(event)=>{
+						const toggle = event.target.checked
+						if (toggle) {
+							setMessageTo((prev) => [
+								...prev, player
+							])
+						} else {
+							setMessageTo((prev) => 
+								prev.filter((item) => item !== player)
+							)
+						}
+					}} />
 				</div>
 			))}
 			</aside>

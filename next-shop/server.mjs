@@ -38,7 +38,7 @@ function createRoomNamespace(io, ID) {
 			//RoomRemovePlayer(ID)
 		})
 		socket.on('message', ({from, message, to, JWT}) => {
-			console.log('message', message)
+			console.log('message', {from, message, to, JWT})
 			to.forEach((name) => {
 				console.log(`/${ID}/${name} emited`)
 				io.of(`/${ID}/${name}`).emit('message_recived', { message, from })
@@ -96,10 +96,6 @@ function createRoomNamespace(io, ID) {
 /* Direct messages for lobbies */
 async function createUserDerect(socket) {
 	console.log('   user conected to chat');
-	socket.on('message', async (data) => {
-		console.log('mesage triggered', data);
-		//socket.emit('message_recived', { from: authUsername, message: data.message })
-	})
 }
 
 const dev = process.env.NODE_ENV !== "production"
@@ -120,10 +116,10 @@ app.prepare().then(() => {
 	instrument(io, {
 		auth: {
 		  type: "basic",
-		  username: "admin", // Replace with your desired username
-		  password: "$2a$12$1Bwx5tqD7h4AbY6JRM8.ZOWwNgjo4quDXJt5adDhC.R7NZsoddyW6", // Replace with a bcrypt-hashed password
+		  username: "admin", 
+		  password: "$2a$12$1Bwx5tqD7h4AbY6JRM8.ZOWwNgjo4quDXJt5adDhC.R7NZsoddyW6",
 		},
-		mode: "development", // Set to "production" in a live environment
+		mode: "development",
 	  });
 /* Lobbies management */
 	io.on("connection", (socket) => {
