@@ -67,7 +67,11 @@ function createRoomNamespace(io, ID) {
 			roleArray.forEach(role => {
 				if (playersList[i] !== undefined) { // Check if the current element is defined
 					const ind = playersList[i].toString(); // Convert to string
-					playersRoles[ind] = role; // Assign the role
+					playersRoles[ind] = {
+						role: role,
+						alive: true
+					};
+					io.of(`/${ID}/${ind}`).emit('assignrole', role)
 				} else {
 					console.warn(`Warning: playersList[${i}] is undefined. Skipping this role.`);
 				}
@@ -76,11 +80,26 @@ function createRoomNamespace(io, ID) {
 			console.log(playersRoles)
 			i = 0
 			playersIn = false
-			const gameLoop = [ 'day', 'mafia', 'police']
+			const gameLoop = [ 'day', 'mafia', 'police', 'doctor']
 			const interval = setInterval(() => {
 				console.log(gameLoop[i]);
 				RoomNamespace.emit('next', gameLoop[i])
-				if(i<2){
+				switch (gameLoop[i]) {
+					case 'day':
+						console.log('inform who was killed or revived...')
+						break;
+					case 'mafia':
+						console.log('let mafia chose')
+						break;
+					case 'police':
+						console.log('let oficer chose')
+						break;
+					case 'doctor':
+						console.log('let doctor chose')
+						break;
+
+				}
+				if(i<3) {
 					i++
 				} else {
 					i = 0
@@ -88,10 +107,6 @@ function createRoomNamespace(io, ID) {
 			}, 30000)
 		})
 	})
-	//io.of(`/${ID}/user`).on("message", async (data) => {
-	//	console.log(`room: ${ID}\n mesagge recived: `, data)
-	//	io.of(`/${ID}`).emit('message_recived', { from: authUsername, message: data.message, to: data.to })
-	//})
 }
 /* Direct messages for lobbies */
 async function createUserDerect(socket) {

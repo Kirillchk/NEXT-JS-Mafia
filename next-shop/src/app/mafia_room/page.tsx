@@ -30,6 +30,8 @@ export default function Home() {
 		doctor: 1,
 		citizen: 2,
 	});
+	/************************** fix this shit later */
+	const [getmyrole, setmyrole] = useState<string>('')
 
 	const handleIncrement = (role: keyof Roles) => {
 	if (totalPlayers < 6) {
@@ -55,6 +57,7 @@ export default function Home() {
 		const utmSource = searchParams.get('utm_room');
 		let password = localStorage.getItem('userPassword');
 		let username = localStorage.getItem('userNickname');
+		setMessageTo([username||''])
 		console.log(
 			'trying to connect to',
 			`http://localhost:3000/room${utmSource} auth:${username} ${password}`
@@ -75,7 +78,9 @@ export default function Home() {
 
 		socket.on('player list update', (data) => {
 			console.log('player list was updated',data)
-			setPeople(data.users);
+			const newlist = data.users
+			setPeople(newlist.filter((item:string) => item !== username));
+			
 		});
 		socket.on('next', (data)=>{
 			console.log('next step is',data)
@@ -92,14 +97,17 @@ export default function Home() {
 	}
 
 	async function conectToChat() {
-	socketMessages = io(`http://localhost:3000/${searchParams.get('utm_room')}/${localStorage.getItem('userNickname')}`);
-	socketMessages.on('connect', () => {
-		console.log('established message socket');
-	});
-	socketMessages.on('message_recived', (data) => {
-		console.log(data);
-		// setChat((prev) => [...prev, data]);
-	});
+		socketMessages = io(`http://localhost:3000/${searchParams.get('utm_room')}/${localStorage.getItem('userNickname')}`);
+		socketMessages.on('connect', () => {
+			console.log('established message socket');
+		});
+		socketMessages.on('message_recived', (data) => {
+			console.log(data);
+			setChat((prev) => [...prev, data]);
+		});
+		socketMessages.on('assignrole', (data) => {
+			setmyrole(data)
+		})
 	}
 
 	const triggerReset = () => {
@@ -159,7 +167,7 @@ export default function Home() {
 			</aside>
 			<div className="m-auto">
 			<Timer ref={timerRef} />
-			<h1>Role Selection</h1>
+			<h1>your role is {getmyrole}</h1>
 			<p>Total Players: {totalPlayers} / 6</p>
 			{Object.entries(roles).map(([role, count]) => (
 				<div key={role}>
