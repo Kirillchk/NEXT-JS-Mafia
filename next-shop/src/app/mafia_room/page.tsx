@@ -204,6 +204,17 @@ export default function Home() {
 					}} />
 				</div>
 			))}
+			{getPeople.map((player, index) => (
+				<button className="overflow-clip" key={index} onClick={() => {
+					if(getmyrole =='citizen') {
+						console.log('you are a citizen')
+					} else {
+						socket?.emit('vote', {from: localStorage.getItem('userNickname'), against: player})
+					}
+				}}>
+					{player}
+				</button>
+			))}
 			</aside>
 		</div>
 	);
