@@ -5,39 +5,176 @@ import { instrument } from "@socket.io/admin-ui"
 import { UserFind, UserVerifyJWT, RoomAddPlayer, RoomFind, RoomSave, RoomDelete, RoomsFindAll, RoomRemovePlayer } from './src/data/models.mjs'
 /* Single room */
 function createRoomNamespace(io, ID) {
-	console.log('--------------')
-	console.log('creating a room namespace', ID)
+	const playersList = {}
+	const playersRoles = {}
+	let playersIn = true
+	let gameState = null
+	let gameTimer = null
+	
+	const Roles = {} 
+	class Role {
+		constructor (name, NarrateArg){
+			Roles[name] = this
+			this.name = name
+			this.NarrateArg = NarrateArg
+			this.decisions = {}
+		}
+		Narate(){
+			const decisions = Roles[this.name].decisions
+			if (Object.keys(decisions).length != 0){
+				this.NarrateArg(decisions)
+			}
+		}
+	}
+	new Role('mafia',() => {
+		const mafiaDecisions = Roles['mafia'].decisions
+		if (Object.keys(mafiaDecisions).length !== 0){
+			const votedOne = findMostCommonElement(Object.values(mafiaDecisions))
+			playersRoles[votedOne].alive = false
+			console.log(votedOne, 'is dead')
+			Object.keys(playersList).forEach((name) => {
+				io.of(`/${ID}/${name}`).emit('message_recived', { message:`${votedOne} was visited by mafia`, from: 'Host' })
+			})
+		}
+	})
+	new Role('poice',() => {
+		if (decisions.police !== 0){
+			Object.values(decisions.police).forEach((votedOne) => {
+				console.log(votedOne, playersRoles[votedOne].role=='mafia'?'is mafia':'is not mafia')
+				const result = playersRoles[votedOne].role == 'mafia' ? 
+				'Sheriff has discovered a mafia':'Sheriff has failed to discover a mafia'
+				Object.keys(playersList).forEach((name) => {
+					io.of(`/${ID}/${name}`).emit('message_recived', { message: result, from: 'Host' })
+				})
+			})
+		}
+	})
+	new Role('doctor',() => {
+		if (decisions.doctor !== 0){
+			Object.values(decisions.doctor).forEach((votedOne) => {
+				playersRoles[votedOne].alive = true
+				console.log(votedOne, 'was healed')
+				Object.keys(playersList).forEach((name) => {
+					io.of(`/${ID}/${name}`).emit('message_recived', { message: `${votedOne} was visited by doctor`, from: 'Host' })
+				})
+			})
+		} 
+	})
+
+	const gameLoop = [ 'day', 'mafia', 'police', 'doctor']
+	function Round(iteration){
+		gameState = gameLoop[iteration]
+		RoomNamespace.emit('next', gameLoop[iteration])
+		console.log('now its', gameState)
+		if (iteration < 3 && iteration != 0) {
+			StartTimer(iteration+1)
+		} else {
+			NarrateMafia()
+			NarratePolice()
+			NarrateDoctor()
+			decisions = {
+				mafia:{ },
+				police:{ },
+				doctor: { }
+			}
+			const res = CheckForVictory()
+			if(!res){
+				StartTimer(iteration==3?0:iteration+1)
+			}
+		}
+	}
+	function StartTimer(iteration = 0){
+		gameTimer = setTimeout(Round, 15000, iteration)
+	}
+	function SkipTimer(){
+		const iteration = gameTimer._timerArgs[0] + 1
+		clearTimeout(gameTimer)
+		StartTimer(iteration)
+		RoomNamespace.emit('next', gameLoop[iteration])
+	}
 	const decisions = {
 		mafia:{ },
 		police:{ },
 		doctor: { }
 	}
-	const playersList = {}
-	const playersRoles = {}
-	let gameState = null
-	let playersIn = true
+	function NarrateMafia(){
+		if (Object.keys(decisions.mafia).length !== 0){
+			const votedOne = findMostCommonElement(Object.values(decisions.mafia))
+			playersRoles[votedOne].alive = false
+			console.log(votedOne, 'is dead')
+			Object.keys(playersList).forEach((name) => {
+				io.of(`/${ID}/${name}`).emit('message_recived', { message:`${votedOne} was visited by mafia`, from: 'Host' })
+			})
+		}
+	}
+	function NarratePolice(){
+		if (decisions.police !== 0){
+			Object.values(decisions.police).forEach((votedOne) => {
+				console.log(votedOne, playersRoles[votedOne].role=='mafia'?'is mafia':'is not mafia')
+				const result = playersRoles[votedOne].role == 'mafia' ? 
+				'Sheriff has discovered a mafia':'Sheriff has failed to discover a mafia'
+				Object.keys(playersList).forEach((name) => {
+					io.of(`/${ID}/${name}`).emit('message_recived', { message: result, from: 'Host' })
+				})
+			})
+		}
+	}
+	function NarrateDoctor(){
+		if (decisions.doctor !== 0){
+			Object.values(decisions.doctor).forEach((votedOne) => {
+				playersRoles[votedOne].alive = true
+				console.log(votedOne, 'was healed')
+				Object.keys(playersList).forEach((name) => {
+					io.of(`/${ID}/${name}`).emit('message_recived', { message: `${votedOne} was visited by doctor`, from: 'Host' })
+				})
+			})
+		}
+	}
+	function CheckForVictory(){
+		let countMafia = 0
+		let countNonMafia = 0
+		const playersArr = Object.values(playersRoles)
+		playersArr.forEach((player)=>{
+			if (player.alive) {
+				if (player.role == 'mafia') {
+					countMafia += 1
+				} else {
+					countNonMafia += 1
+				}
+			}
+		})
+		if ( countMafia > countNonMafia) {
+			Object.keys(playersList).forEach((name) => {
+				io.of(`/${ID}/${name}`).emit('message_recived', 
+					{ message: `Mafia won`, from: 'Host' })
+			})
+			clearTimeout(gameTimer)
+			return true
+			/** */
+		} else if (countMafia == 0) {
+			Object.keys(playersList).forEach((name) => {
+				io.of(`/${ID}/${name}`).emit('message_recived', 
+					{ message: `Mafia lost`, from: 'Host' })
+			})
+			clearTimeout(gameTimer)
+			return true
+			/** */
+		}
+		return false
+	}
 	const RoomNamespace = io.of(`room${ID}`)
 	RoomNamespace.on("connection", async (socket) => {
-		console.log('CONECTED', socket.id)
 		const { password: authPassword, username: authUsername } = socket.handshake.auth 
-		console.log('  1 conecting to:', ID, 'auth:', authPassword, ' ', authUsername)
 		const { password: databasePassword } = await UserFind(authUsername) 
-		console.log('  2 returned user password ', databasePassword)
-		//const { online } = await RoomFind(ID)
-		//console.log('  3 returned online', online)
 		if(authPassword != databasePassword || !playersIn /*|| online >= 15*/){
-			console.log('  ! returned because', 
-				authPassword,
-				databasePassword,
-				/*online*/)
 			return
 		}
 		if (!Object.keys(playersList).includes(authUsername)){
-			io.of(`/${ID}/${authUsername}`).on("connection", createUserDerect)
+			io.of(`/${ID}/${authUsername}`).on("connection", (socket) => {
+				console.log('   user conected to chat');
+			})
 			//const sucses = await RoomAddPlayer(ID)
-			//console.log('adding player count',sucses)
 		}
-		console.log('    user', authUsername, 'joined room', ID)
 		playersList[authUsername] = socket.id
 		RoomNamespace.emit('player list update', { users: Object.keys(playersList) })
 		socket.on('disconnect',() => {
@@ -48,33 +185,23 @@ function createRoomNamespace(io, ID) {
 			console.log('message', {from, message, to, JWT})
 			if(playersRoles[from].alive){
 				to.forEach((name) => {
-					console.log(`/${ID}/${name} emited`)
 					io.of(`/${ID}/${name}`).emit('message_recived', { message, from })
 				})
 			}
 		})
 		socket.on('start', async ({ roles }) => {
 			RoomNamespace.emit('start')
-			console.log('game has stared', playersList)
-			roles = {
-				mafia: 2,
-				police: 1,
-				doctor: 1,
-				citizen: 2,
-			}
+			console.log('game has stared', playersList, roles)
 			const rolesEntries = Object.entries(roles)
 			const roleArray = [];
-
-			// Populate the array with roles based on their counts
 			for (const [role, count] of rolesEntries) {
 				for (let i = 0; i < count; i++) {
 					roleArray.push(role);
 				}
 			}
 			shuffleArray(roleArray);
-			let i = 0;
 			const namearray = Object.keys(playersList)
-			roleArray.forEach(role => {
+			roleArray.forEach((role, i) => {
 				if (namearray[i] !== undefined) { // Check if the current element is defined
 					const ind = namearray[i];
 					playersRoles[ind] = {
@@ -82,75 +209,23 @@ function createRoomNamespace(io, ID) {
 						alive: true
 					};
 					io.of(`/${ID}/${ind}`).emit('assignrole', role)
-				} else {
-					console.warn(`Warning: playersList[${i}] is undefined. Skipping this role.`);
 				}
-				i++;
 			});
-			console.log(playersRoles)
-			i = 0
 			playersIn = false
-			const gameLoop = [ 'day', 'mafia', 'police', 'doctor']
-			const interval = setInterval(() => {
-				console.log(gameLoop[i]);
-				RoomNamespace.emit('next', gameLoop[i])
-				gameState = gameLoop[i]
-				if(gameState=='day') {
-					if (Object.keys(decisions.mafia).length !== 0){
-						const votedOne = findMostCommonElement(Object.values(decisions.mafia))
-						playersRoles[votedOne].alive = false
-						console.log(votedOne, 'is dead')
-					}
-					if (decisions.police !== 0){
-						Object.values(decisions.police).forEach((votedOne) => {
-							console.log(votedOne, playersRoles[votedOne].role=='mafia'?'is mafia':'is not mafia')
-						})
-					}
-					if (decisions.doctor !== 0){
-						Object.values(decisions.doctor).forEach((votedOne) => {
-							playersRoles[votedOne].alive = true
-							console.log(votedOne, 'was healed')
-						})
-					}
-				}
-				//switch (gameLoop[i]) {
-				//	case 'day':
-				//		console.log('inform who was killed or revived...')
-				//		break;
-				//	case 'mafia':
-				//		console.log('let mafia chose')
-				//		break;
-				//	case 'police':
-				//		console.log('let oficer chose')
-				//		break;
-				//	case 'doctor':
-				//		console.log('let doctor chose')
-				//		break;
-				//}
-				if(i<3) {
-					i++
-				} else {
-					i = 0
-				}
-			}, 15000)
+			StartTimer()
 		})
 		socket.on('vote', ({from, against})=>{
 			const id = playersList[from]
 			const votingrole = playersRoles[from].role
 			if(id != socket.id || gameState != votingrole) {
-				console.log('ERROR', gameState, votingrole)
 				return 
 			}
-			console.log('wtf', playersList, socket.id)
-			console.log(from, 'is', votingrole, 'and voted against', against)
 			decisions[gameState][from] = against
-			console.log('decisions', decisions)
+		})
+		socket.on('Restart', () =>{
+			SkipTimer()
 		})
 	})
-}
-/* Direct messages for lobbies */
-async function createUserDerect(socket) {
-	console.log('   user conected to chat');
 }
 
 const dev = process.env.NODE_ENV !== "production"
@@ -176,12 +251,10 @@ app.prepare().then(() => {
 		},
 		mode: "development",
 	  });
-/* Lobbies management */
 	io.on("connection", (socket) => {
 		socket.on("createroom", async ({ userName, JWT, roomname }) => {
 			const verified = await UserVerifyJWT(userName, JWT) 
 			if (!verified) {
-				console.log('returning, failed to verify JWT')
 				return
 			}
 			const room = {
@@ -191,17 +264,13 @@ app.prepare().then(() => {
 			}
 			const result = await RoomSave(room)
 			if (!result) {
-				console.log('returning, failed to save')
 				return
 			}
-			console.log('not returning')
 			createRoomNamespace(io, roomname)
-			console.log('creating a room')
 			io.emit("room_created", { key: roomname, room: room})
 		});
 		socket.on("deleteroom", (data) => {
 			RoomDelete(data.ID)
-			console.log('deleting a room')
 			io.emit("deleteroom", data)
 		});
 	});

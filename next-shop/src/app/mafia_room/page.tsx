@@ -111,7 +111,8 @@ export default function Home() {
 	}
 
 	const triggerReset = () => {
-	
+		console.log('debug');
+		socket?.emit('Restart');
 	};
 
 	useEffect(() => {
@@ -141,7 +142,7 @@ export default function Home() {
 
 	const triggerDebug = () => {
 		console.log('debug');
-		socket?.emit('start', roles);
+		socket?.emit('start', { roles:roles});
 	};
 
 	return (
@@ -171,12 +172,12 @@ export default function Home() {
 			<p>Total Players: {totalPlayers} / 6</p>
 			{Object.entries(roles).map(([role, count]) => (
 				<div key={role}>
-				<span>
-					{role}: {count}
-				</span>
 				<button onClick={() => handleDecrement(role as keyof Roles)} disabled={count === 0}>
 					-
 				</button>
+				<span>
+					{role}: {count}
+				</span>
 				<button onClick={() => handleIncrement(role as keyof Roles)} disabled={totalPlayers >= 6}>
 					+
 				</button>
