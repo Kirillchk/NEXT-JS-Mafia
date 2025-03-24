@@ -10,11 +10,12 @@ function createRoomNamespace(io, ID) {
 	let playersIn = true
 	let gameState = null
 	let gameTimer = null
-	
 	const Roles = {} 
+	const gameLoop = [ 'day' ]
 	class Role {
 		constructor (name, NarrateArg){
 			Roles[name] = this
+			gameLoop.push(name)
 			this.name = name
 			this.NarrateArg = NarrateArg
 			this.decisions = {}
@@ -23,64 +24,46 @@ function createRoomNamespace(io, ID) {
 			const decisions = Roles[this.name].decisions
 			if (Object.keys(decisions).length != 0){
 				this.NarrateArg(decisions)
+				this.decisions = {}
 			}
 		}
 	}
-	new Role('mafia',() => {
-		const mafiaDecisions = Roles['mafia'].decisions
-		if (Object.keys(mafiaDecisions).length !== 0){
-			const votedOne = findMostCommonElement(Object.values(mafiaDecisions))
-			playersRoles[votedOne].alive = false
-			console.log(votedOne, 'is dead')
-			Object.keys(playersList).forEach((name) => {
-				io.of(`/${ID}/${name}`).emit('message_recived', { message:`${votedOne} was visited by mafia`, from: 'Host' })
-			})
-		}
+	new Role('mafia',(Decisions) => {
+		const votedOne = findMostCommonElement(Object.values(Decisions))
+		playersRoles[votedOne].alive = false
+		console.log(votedOne, 'is dead')
+		sendToEveryone(`${votedOne} was visited by mafia`)
 	})
-	new Role('poice',() => {
-		if (decisions.police !== 0){
-			Object.values(decisions.police).forEach((votedOne) => {
-				console.log(votedOne, playersRoles[votedOne].role=='mafia'?'is mafia':'is not mafia')
-				const result = playersRoles[votedOne].role == 'mafia' ? 
-				'Sheriff has discovered a mafia':'Sheriff has failed to discover a mafia'
-				Object.keys(playersList).forEach((name) => {
-					io.of(`/${ID}/${name}`).emit('message_recived', { message: result, from: 'Host' })
-				})
-			})
-		}
+	new Role('police',(Decisions) => {
+		Object.values(Decisions).forEach((votedOne) => {
+			console.log(votedOne, playersRoles[votedOne].role=='mafia'?'is mafia':'is not mafia')
+			const result = playersRoles[votedOne].role == 'mafia' ? 
+			'Sheriff has discovered a mafia':'Sheriff has failed to discover a mafia'
+			sendToEveryone(result)
+		})
 	})
-	new Role('doctor',() => {
-		if (decisions.doctor !== 0){
-			Object.values(decisions.doctor).forEach((votedOne) => {
-				playersRoles[votedOne].alive = true
-				console.log(votedOne, 'was healed')
-				Object.keys(playersList).forEach((name) => {
-					io.of(`/${ID}/${name}`).emit('message_recived', { message: `${votedOne} was visited by doctor`, from: 'Host' })
-				})
-			})
-		} 
+	new Role('doctor',(Decisions) => {
+		Object.values(Decisions).forEach((votedOne) => {
+			playersRoles[votedOne].alive = true
+			console.log(votedOne, 'was healed')
+			sendToEveryone(`${votedOne} was visited by doctor`)
+		})
 	})
-
-	const gameLoop = [ 'day', 'mafia', 'police', 'doctor']
 	function Round(iteration){
+		if (iteration == 4) {
+			iteration = 0
+		}
 		gameState = gameLoop[iteration]
 		RoomNamespace.emit('next', gameLoop[iteration])
-		console.log('now its', gameState)
-		if (iteration < 3 && iteration != 0) {
-			StartTimer(iteration+1)
-		} else {
-			NarrateMafia()
-			NarratePolice()
-			NarrateDoctor()
-			decisions = {
-				mafia:{ },
-				police:{ },
-				doctor: { }
-			}
+		console.log('now its', gameState, iteration)
+		if (iteration == 0){
+			Object.values(Roles).forEach((role)=>role.Narate())
 			const res = CheckForVictory()
 			if(!res){
-				StartTimer(iteration==3?0:iteration+1)
+				StartTimer(iteration+1)
 			}
+		} else {
+			StartTimer(iteration+1)
 		}
 	}
 	function StartTimer(iteration = 0){
@@ -92,43 +75,13 @@ function createRoomNamespace(io, ID) {
 		StartTimer(iteration)
 		RoomNamespace.emit('next', gameLoop[iteration])
 	}
-	const decisions = {
-		mafia:{ },
-		police:{ },
-		doctor: { }
+	function sendMessage(message, from, to){
+		io.of(`/${ID}/${to}`).emit('message_recived', { message, from })
 	}
-	function NarrateMafia(){
-		if (Object.keys(decisions.mafia).length !== 0){
-			const votedOne = findMostCommonElement(Object.values(decisions.mafia))
-			playersRoles[votedOne].alive = false
-			console.log(votedOne, 'is dead')
-			Object.keys(playersList).forEach((name) => {
-				io.of(`/${ID}/${name}`).emit('message_recived', { message:`${votedOne} was visited by mafia`, from: 'Host' })
-			})
-		}
-	}
-	function NarratePolice(){
-		if (decisions.police !== 0){
-			Object.values(decisions.police).forEach((votedOne) => {
-				console.log(votedOne, playersRoles[votedOne].role=='mafia'?'is mafia':'is not mafia')
-				const result = playersRoles[votedOne].role == 'mafia' ? 
-				'Sheriff has discovered a mafia':'Sheriff has failed to discover a mafia'
-				Object.keys(playersList).forEach((name) => {
-					io.of(`/${ID}/${name}`).emit('message_recived', { message: result, from: 'Host' })
-				})
-			})
-		}
-	}
-	function NarrateDoctor(){
-		if (decisions.doctor !== 0){
-			Object.values(decisions.doctor).forEach((votedOne) => {
-				playersRoles[votedOne].alive = true
-				console.log(votedOne, 'was healed')
-				Object.keys(playersList).forEach((name) => {
-					io.of(`/${ID}/${name}`).emit('message_recived', { message: `${votedOne} was visited by doctor`, from: 'Host' })
-				})
-			})
-		}
+	function sendToEveryone(message, from = 'Host'){
+		Object.keys(playersList).forEach((name) => {
+			sendMessage(message, name, from)
+		})
 	}
 	function CheckForVictory(){
 		let countMafia = 0
@@ -185,10 +138,11 @@ function createRoomNamespace(io, ID) {
 			console.log('message', {from, message, to, JWT})
 			if(playersRoles[from].alive){
 				to.forEach((name) => {
-					io.of(`/${ID}/${name}`).emit('message_recived', { message, from })
+					sendMessage(message, from, name)
 				})
 			}
 		})
+		
 		socket.on('start', async ({ roles }) => {
 			RoomNamespace.emit('start')
 			console.log('game has stared', playersList, roles)
@@ -206,7 +160,7 @@ function createRoomNamespace(io, ID) {
 					const ind = namearray[i];
 					playersRoles[ind] = {
 						role: role,
-						alive: true
+						alive: true,
 					};
 					io.of(`/${ID}/${ind}`).emit('assignrole', role)
 				}
@@ -216,11 +170,11 @@ function createRoomNamespace(io, ID) {
 		})
 		socket.on('vote', ({from, against})=>{
 			const id = playersList[from]
-			const votingrole = playersRoles[from].role
-			if(id != socket.id || gameState != votingrole) {
+			const votingRole = playersRoles[from]
+			if(id != socket.id || gameState != votingRole.role || gameState=='day' || !votingRole.alive) {
 				return 
 			}
-			decisions[gameState][from] = against
+			Roles[gameState].decisions[from] = against
 		})
 		socket.on('Restart', () =>{
 			SkipTimer()
