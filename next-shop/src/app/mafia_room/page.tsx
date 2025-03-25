@@ -23,7 +23,7 @@ export default function Home() {
 	const [messageTo, setMessageTo] = useState<string[]>([])
 	const [getChat, setChat] = useState<Array<message>>([]);
 	const [getMessage, setMessage] = useState<string>('');
-	const [getPeople, setPeople] = useState<string[]>([]);
+	const [getPeople, setPeople] = useState<string[]>(['aaaaaa', 'aaaaa', 'a']);
 	const [roles, setRoles] = useState<Roles>({
 		mafia: 2,
 		police: 1,
@@ -79,19 +79,19 @@ export default function Home() {
 		socket.on('player list update', (data) => {
 			console.log('player list was updated',data)
 			const newlist = data.users
-			setPeople(newlist.filter((item:string) => item !== username));
+			//setPeople(newlist.filter((item:string) => item !== username));
 			
 		});
 		socket.on('next', (data)=>{
 			console.log('next step is',data)
 			if (timerRef.current) {
-				timerRef.current.reset(); // Call the reset function in the Timer component
+				timerRef.current.reset(data); // Call the reset function in the Timer component
 			}
 		})
 		socket.on('start', ()=>{
 			console.log('game has started')
 			if (timerRef.current) {
-				timerRef.current.reset();
+				timerRef.current.reset('day');
 			}
 		})
 	}
@@ -116,17 +116,17 @@ export default function Home() {
 	};
 
 	useEffect(() => {
-	if (!socket) {
-		conectToRoom();
-	}
-	return () => {
-		if (socket) {
-			socket.disconnect();
-			socket = null;
-			console.log('disconnected');
+		if (!socket) {
+			conectToRoom();
 		}
-	};
-	}, [searchParams]);
+		return () => {
+			if (socket) {
+				socket.disconnect();
+				socket = null;
+				console.log('disconnected');
+			}
+		}
+	}, [])
 
 	const triggerEmit = () => {
 		if (socket?.connected) {
@@ -167,55 +167,68 @@ export default function Home() {
 			</div>
 			</aside>
 			<div className="m-auto">
-			<Timer ref={timerRef} />
-			<h1>your role is {getmyrole}</h1>
-			<p>Total Players: {totalPlayers} / 6</p>
-			{Object.entries(roles).map(([role, count]) => (
-				<div key={role}>
-				<button onClick={() => handleDecrement(role as keyof Roles)} disabled={count === 0}>
-					-
-				</button>
-				<span>
-					{role}: {count}
-				</span>
-				<button onClick={() => handleIncrement(role as keyof Roles)} disabled={totalPlayers >= 6}>
-					+
-				</button>
-				</div>
-			))}
-			<button onClick={triggerDebug}>Start</button>
-			<button onClick={triggerReset}>Reset</button>
+				<p>Total Players: {totalPlayers} / 6</p>
+				{Object.entries(roles).map(([role, count]) => (
+					<div key={role}>
+					<button onClick={() => handleDecrement(role as keyof Roles)} disabled={count === 0}>
+						-
+					</button>
+					<span>
+						{role}: {count}
+					</span>
+					<button onClick={() => handleIncrement(role as keyof Roles)} disabled={totalPlayers >= 6}>
+						+
+					</button>
+					</div>
+				))}
+				<button onClick={triggerDebug}>Start</button>
 			</div>
 
-			<aside className="h-[100vh] w-[20vw]">
-			{getPeople.map((player, index) => (
-				<div className="overflow-clip" key={index}>
-					{player}
-					<input type="checkbox" name="" id="" onChange={(event)=>{
-						const toggle = event.target.checked
-						if (toggle) {
-							setMessageTo((prev) => [
-								...prev, player
-							])
-						} else {
-							setMessageTo((prev) => 
-								prev.filter((item) => item !== player)
-							)
-						}
-					}} />
+			<aside className="flex flex-col h-[100vh] w-[20vw] justify-between">
+				<div className='mx-auto'>
+					Message to:
+					{getPeople.map((player, index) => (
+						<div className="overflow-clip flex justify-between" key={index}>
+							<label htmlFor={player} className='pd-auto w-full'>
+								<div>
+									{player}
+								</div>
+							</label>
+							<div>
+								<input  type="checkbox"id={player} onChange={(event)=>{
+									const toggle = event.target.checked
+									if (toggle) {
+										setMessageTo((prev) => [
+											...prev, player
+										])
+									} else {
+										setMessageTo((prev) => 
+											prev.filter((item) => item !== player)
+										)
+									}
+								}}/>
+							</div>
+						</div>
+					))}
 				</div>
-			))}
-			{getPeople.map((player, index) => (
-				<button className="overflow-clip" key={index} onClick={() => {
-					if(getmyrole =='citizen') {
-						console.log('you are a citizen')
-					} else {
-						socket?.emit('vote', {from: localStorage.getItem('userNickname'), against: player})
-					}
-				}}>
-					{player}
-				</button>
-			))}
+				<div className='m-auto'>
+					<Timer ref={timerRef} />
+					<h1>your role is {getmyrole||'???'}</h1>
+				</div>
+				<div className='mx-auto'>
+					Vote for:
+					{getPeople.map((player, index) => (
+						<button className="overflow-clip block" key={index} onClick={() => {
+							if(getmyrole =='citizen') {
+								console.log('you are a citizen')
+							} else {
+								socket?.emit('vote', {from: localStorage.getItem('userNickname'), against: player})
+							}
+						}}>
+							{player}
+						</button>
+					))}
+				</div>
 			</aside>
 		</div>
 	);
@@ -224,14 +237,16 @@ export default function Home() {
 
 // Define the type for the ref (optional but recommended for TypeScript)
 export type TimerHandle = {
-  reset: () => void;
+  reset: (arg:string) => void;
 };
 
 const Timer = forwardRef<TimerHandle>((props, ref) => {
   const [timeLeft, setTimeLeft] = useState(0);
+  const [currentTeam, setCurrentTeam] = useState('');
 
-  const reset = () => {
-    setTimeLeft(30); // Reset the timer to 30 seconds
+  const reset = (arg:string) => {
+    setTimeLeft(30); 
+	setCurrentTeam(arg)
   };
 
   // Expose the reset function to the parent via ref
@@ -251,7 +266,8 @@ const Timer = forwardRef<TimerHandle>((props, ref) => {
 
   return (
     <div>
-      <h1>Time Left: {timeLeft} seconds</h1>
+		<h1>Current team playing:{currentTeam||'???'}</h1>
+    	<h1>Time Left: {timeLeft} seconds</h1>
     </div>
   );
 });

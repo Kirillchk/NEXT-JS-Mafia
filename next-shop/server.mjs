@@ -19,8 +19,6 @@ function createRoomNamespace(io, ID) {
 			this.name = name
 			this.NarrateArg = NarrateArg
 			this.decisions = {}
-			console.log('--------------------')
-			console.log('aded new role', Roles)
 		}
 		Narate(){
 			const decisions = Roles[this.name].decisions
