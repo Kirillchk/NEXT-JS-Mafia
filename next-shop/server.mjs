@@ -19,12 +19,13 @@ function createRoomNamespace(io, ID) {
 			this.name = name
 			this.NarrateArg = NarrateArg
 			this.decisions = {}
+			console.log('--------------------')
+			console.log('aded new role', Roles)
 		}
 		Narate(){
 			const decisions = Roles[this.name].decisions
 			if (Object.keys(decisions).length != 0){
 				this.NarrateArg(decisions)
-				this.decisions = {}
 			}
 		}
 	}
@@ -67,20 +68,20 @@ function createRoomNamespace(io, ID) {
 		}
 	}
 	function StartTimer(iteration = 0){
-		gameTimer = setTimeout(Round, 15000, iteration)
+		gameTimer = setTimeout(Round, 30000, iteration)
 	}
 	function SkipTimer(){
-		const iteration = gameTimer._timerArgs[0] + 1
+		const iteration = gameTimer._timerArgs[0]
 		clearTimeout(gameTimer)
-		StartTimer(iteration)
+		Round(iteration)
 		RoomNamespace.emit('next', gameLoop[iteration])
 	}
 	function sendMessage(message, from, to){
-		io.of(`/${ID}/${to}`).emit('message_recived', { message, from })
+		io.of(`/${ID}/${to}`).emit('message_recived', { message: message, from: from })
 	}
 	function sendToEveryone(message, from = 'Host'){
 		Object.keys(playersList).forEach((name) => {
-			sendMessage(message, name, from)
+			sendMessage(message, from, name)
 		})
 	}
 	function CheckForVictory(){
@@ -97,18 +98,12 @@ function createRoomNamespace(io, ID) {
 			}
 		})
 		if ( countMafia > countNonMafia) {
-			Object.keys(playersList).forEach((name) => {
-				io.of(`/${ID}/${name}`).emit('message_recived', 
-					{ message: `Mafia won`, from: 'Host' })
-			})
+			sendToEveryone('Mafia won')
 			clearTimeout(gameTimer)
 			return true
 			/** */
 		} else if (countMafia == 0) {
-			Object.keys(playersList).forEach((name) => {
-				io.of(`/${ID}/${name}`).emit('message_recived', 
-					{ message: `Mafia lost`, from: 'Host' })
-			})
+			sendToEveryone('Mafia Lost')
 			clearTimeout(gameTimer)
 			return true
 			/** */
@@ -170,11 +165,24 @@ function createRoomNamespace(io, ID) {
 		})
 		socket.on('vote', ({from, against})=>{
 			const id = playersList[from]
-			const votingRole = playersRoles[from]
-			if(id != socket.id || gameState != votingRole.role || gameState=='day' || !votingRole.alive) {
+			const { role, alive } = playersRoles[from]
+			if(id != socket.id || gameState != role || gameState=='day' || !alive) {
 				return 
 			}
-			Roles[gameState].decisions[from] = against
+			Roles[role].decisions[from] = against
+			const arrayOfSameRole = []
+			const arrayOfVoted = []
+			Object.entries(playersRoles).forEach(([key, value])=>{
+				if(role == value.role){
+					arrayOfSameRole.push(key)
+				}
+			})
+			Object.keys(Roles[role].decisions).forEach((key)=>{
+				arrayOfVoted.push(key)
+			})
+			if(areArraysEqual(arrayOfSameRole, arrayOfVoted)){
+				SkipTimer()
+			}
 		})
 		socket.on('Restart', () =>{
 			SkipTimer()
@@ -258,3 +266,15 @@ function findMostCommonElement(arr) {
 
     return [...countMap.entries()].reduce((a, b) => (b[1] > a[1] ? b : a))[0];
 }
+
+Object.clear = function(obj) {
+    for (const key of Reflect.ownKeys(obj)) {
+        delete obj[key]
+    }
+}
+
+function areArraysEqual(arr1, arr2) {
+	if (arr1.length !== arr2.length) return false;
+	return arr1.every((item, index) => item === arr2[index]);
+}
+  
