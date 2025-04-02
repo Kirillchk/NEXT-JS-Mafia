@@ -23,12 +23,12 @@ export default function Home() {
 	const [messageTo, setMessageTo] = useState<string[]>([])
 	const [getChat, setChat] = useState<Array<message>>([]);
 	const [getMessage, setMessage] = useState<string>('');
-	const [getPeople, setPeople] = useState<string[]>(['aaaaaa', 'aaaaa', 'a']);
+	const [getPeople, setPeople] = useState<string[]>([]);
 	const [roles, setRoles] = useState<Roles>({
-		mafia: 2,
+		mafia: 1,
 		police: 1,
 		doctor: 1,
-		citizen: 2,
+		citizen: 0,
 	});
 	/************************** fix this shit later */
 	const [getmyrole, setmyrole] = useState<string>('')
@@ -79,7 +79,7 @@ export default function Home() {
 		socket.on('player list update', (data) => {
 			console.log('player list was updated',data)
 			const newlist = data.users
-			//setPeople(newlist.filter((item:string) => item !== username));
+			setPeople(newlist.filter((item:string) => item !== username));
 			
 		});
 		socket.on('next', (data)=>{
