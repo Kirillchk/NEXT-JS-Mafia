@@ -9,7 +9,7 @@ export default function authenticate(){
 		const password = form.get('userPassword') as string || ''
 		const userData = { username, password }
 		if (getSubmitLogin) {
-			const res = await fetch('http://localhost:3000/api/users/login', {
+			const res = await fetch('/api/users/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ export default function authenticate(){
 			console.log(res)
 			localStorage.setItem('JWT', data.JWT)
 		} else {
-			const res = await fetch('http://localhost:3000/api/users/createuser', {
+			const res = await fetch('/api/users/createuser', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -34,21 +34,19 @@ export default function authenticate(){
 		localStorage.setItem('userPassword', password)
 	}
 	return (
-		<>
-			{
-				getSubmitLogin ?
-				<div>Login</div>:<div>Register</div>
-			}
+		<div className="flex-row mt-[10vh]">
 			<button onClick={() => setSubmitLogin(!getSubmitLogin)}>
-				{
-					getSubmitLogin ? 'switch to Register': 'switch to Login'
-				}
+			{
+				getSubmitLogin ? 'switch to Register': 'switch to Login'
+			}
 			</button>
-			<form action={formSubmit}>
-				<input required type="text" minLength={4} name="userPassword" placeholder="Password"/>
-				<input required type="text" minLength={6} name="userNickname" placeholder="Login"/>
-				<input type="submit" />
+			<form action={formSubmit} className="block justify-around">
+				<input required type="text" minLength={4} name="userPassword" placeholder="Password"
+				className="block m-auto"/>
+				<input required type="text" minLength={6} name="userNickname" placeholder="Login"
+				className="block m-auto"/>
+				<input type="submit" value={!getSubmitLogin ? 'Register': 'Login'}/>
 			</form>
-		</>
+		</div>
 	)
 }

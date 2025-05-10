@@ -28,10 +28,10 @@ const Home = () => {
 	}
 
 	return (
-		<div className="flex-row p-[10vh]">
+		<div className="flex-row mt-[10vh] ">
 			<h1>All Rooms</h1>
-			<button onClick={() => setVisible(!getVisible)}>Add Room</button>
 			<RoomsElement />
+			<button onClick={() => setVisible(!getVisible)}>Add Room</button>
 			{getVisible && (
 				<form className="flex flex-col" onSubmit={createRoom}>
 					<input
@@ -64,7 +64,7 @@ const RoomsElement = () => {
 	const [getRooms, setRooms] = useState<Map<string, Room>>(new Map());
 	useEffect(() => {
 		async function fetchRooms() {
-			const res = await fetch("http://localhost:3000/api/allrooms");
+			const res = await fetch("/api/allrooms");
 			const data = await res.json();
 			const updatedMap = new Map<string, Room>(Object.entries(data));
 			setRooms(updatedMap);
@@ -94,12 +94,12 @@ const RoomsElement = () => {
 		});
 	}, []);
 	return (
-		<div className="grid gap-2">
+		<div className="grid gap-2 bg-gray-400/50">
 			{[...getRooms.entries()].map(([key, room]) => (
 				(
 					<div
 						key={key}
-						className="w-auto mx-auto bg-gray-400/50 flex justify-around items-center"
+						className="w-auto mx-auto flex justify-around items-center"
 					>
 						<Link
 							href={`/mafia_room?utm_room=${room.roomname}`}
