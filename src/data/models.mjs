@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-mongoose.connect("mongodb://mongodb:27017/mafia");
+mongoose.connect("mongodb://host.docker.internal:27017/mafia");
 
 const userSchema = new mongoose.Schema({
 	username: {

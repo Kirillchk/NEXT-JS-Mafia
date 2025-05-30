@@ -12,16 +12,12 @@ services:
     build: .
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/mafia
     volumes:
       - .:/app
       - /app/node_modules
     depends_on:
       - mongodb
     restart: unless-stopped
-
 
 volumes:
   mongodb_data:
