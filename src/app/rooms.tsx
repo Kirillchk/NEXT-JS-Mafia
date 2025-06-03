@@ -28,8 +28,8 @@ const Home = () => {
 	}
 
 	return (
-		<div className="flex-row mt-[10vh] ">
-			<h1>All Rooms</h1>
+		<div className="flex-row ">
+			<p>vvv All Rooms vvv</p>
 			<RoomsElement />
 			<button onClick={() => setVisible(!getVisible)}>Add Room</button>
 			{getVisible && (
@@ -42,8 +42,9 @@ const Home = () => {
 						placeholder="Room name"
 						className="block bg-gray-400/50"
 					/>
-					<div className="flex m-auto">
+					<div className="flex ">
 						<input
+							className="flex w-full"
 							type="range"
 							min="1"
 							max="10"

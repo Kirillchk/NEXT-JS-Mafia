@@ -34,17 +34,17 @@ export default function authenticate(){
 		localStorage.setItem('userPassword', password)
 	}
 	return (
-		<div className="flex-row mt-[10vh]">
+		<div className="flex-row">
 			<button onClick={() => setSubmitLogin(!getSubmitLogin)}>
 			{
 				getSubmitLogin ? 'switch to Register': 'switch to Login'
 			}
 			</button>
-			<form action={formSubmit} className="block justify-around">
+			<form action={formSubmit} className="flex flex-col justify-around">
 				<input required type="text" minLength={4} name="userPassword" placeholder="Password"
-				className="block m-auto"/>
+				className="block bg-zinc-400/50"/>
 				<input required type="text" minLength={6} name="userNickname" placeholder="Login"
-				className="block m-auto"/>
+				className="block bg-zinc-400/50"/>
 				<input type="submit" value={!getSubmitLogin ? 'Register': 'Login'}/>
 			</form>
 		</div>
